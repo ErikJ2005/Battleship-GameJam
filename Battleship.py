@@ -1,8 +1,5 @@
 """
-git config --global user.email ""
+git config --global user.email 
 
 Start of the project
-
-
-""
 """
