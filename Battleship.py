@@ -205,7 +205,7 @@ class BattleShips(State):
                 self.spill.winner = "You Won!"
 
         except Exception as e:
-            print(f"Error handling data: {e}")
+            print(f"Error handling data: {data_parts}")
 
     def get_hovered_cells(self, mouse_x, mouse_y):
         """Calculate the cells that the ship will occupy based on the mouse position."""

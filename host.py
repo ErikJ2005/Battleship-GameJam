@@ -1,6 +1,7 @@
 import socket
 from _thread import *
 import threading
+import json
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -24,6 +25,7 @@ active_connections = 0
 lock = threading.Lock()  # Prevent race conditions when modifying shared variables
 last_attacks = ["", ""]  # Store the last attack of each player
 current_turn = "0"  # Track whose turn it is (0 or 1)
+
 
 def reset_game():
     """Resets the game state when both players disconnect."""
@@ -54,12 +56,23 @@ def threaded_client(conn):
             arr = reply.split(":")
             id = int(arr[0])
             nid = 1 - id  # Get opponent ID
-
+            turn = 0
+            
             # Check if there's a new attack
-            if arr[4] != last_attacks[id]:  
+            if arr[4] != last_attacks[id]:
+                for ship in json.loads(pos[nid].split(":")[2]):
+                    for part in ship[0]: # liste med int (x og y kordinat)
+                        if json.loads(arr[4])[-1] == part:
+                            current_turn = str(id)
+                            turn = 1 
+                if turn != 1:       
+                    current_turn = str(nid)
+                    
                 last_attacks[id] = arr[4]  # Update last attack
-                current_turn = str(nid)  # Switch turn to the other player
-
+                
+                
+                
+                
             # Update player's position
             arr[5] = current_turn  # Set the current turn state
             pos[id] = ":".join(arr)
