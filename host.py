@@ -1,3 +1,5 @@
+# https://github.com/ErikJ2005/Battleship-GameJam.git
+
 import socket
 from _thread import *
 import threading
@@ -69,9 +71,6 @@ def threaded_client(conn):
                     current_turn = str(nid)
                     
                 last_attacks[id] = arr[4]  # Update last attack
-                
-                
-                
                 
             # Update player's position
             arr[5] = current_turn  # Set the current turn state
