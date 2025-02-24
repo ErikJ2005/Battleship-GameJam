@@ -1,13 +1,13 @@
 import socket
 from _thread import *
-import sys
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-server = '10.72.69.75'
+# Automatically get the local machine's IP address
+server = socket.gethostbyname(socket.gethostname())
 port = 5555
 
-server_ip = socket.gethostbyname(server)
+print(f"Server IP address: {server}")
 
 try:
     s.bind((server, port))
@@ -20,6 +20,7 @@ print("Waiting for a connection")
 
 currentId = "0"
 pos = ["0:50,50", "1:100,100"]
+
 def threaded_client(conn):
     global currentId, pos
     conn.send(str.encode(currentId))
@@ -41,7 +42,7 @@ def threaded_client(conn):
                 if id == 0: nid = 1
                 if id == 1: nid = 0
 
-                reply = pos[nid][:]
+                reply = pos[nid][:]  # Make a copy of the position list
                 print("Sending: " + reply)
 
             conn.sendall(str.encode(reply))
