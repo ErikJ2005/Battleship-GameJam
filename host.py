@@ -1,12 +1,10 @@
 import socket
 from _thread import *
-import threading, time
+import threading
 import json
-import sys  # For shutting down the server
+import sys
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Automatically get the local machine's IP address
 server = socket.gethostbyname(socket.gethostname())
 port = 5555
 
@@ -17,66 +15,68 @@ try:
 except socket.error as e:
     print(str(e))
 
-s.listen(2)  # Set the max number of players to 2
+s.listen(2)  # Maks 2 spillere
 print("Waiting for a connection")
 
 currentId = "0"
 pos = ["0:False:[]:False:[]:0", "1:False:[]:False:[]:0"]
-active_connections = 0  # Tracks number of active players
-lock = threading.Lock()  # Prevent race conditions when modifying shared variables
-last_attacks = ["", ""]  # Store the last attack of each player
-current_turn = "0"  # Track whose turn it is (0 or 1)
+active_connections = 0
+lock = threading.Lock()
+last_attacks = ["", ""]
+current_turn = "0"
+running = True  # Kontrollerer hovedløkken
 
 
 def reset_game():
-    """Resets the game state when both players disconnect."""
-    global currentId, pos, active_connections, last_attacks, current_turn
+    """Resetter spillet og avslutter serveren hvis ingen spillere er igjen."""
+    global currentId, pos, active_connections, last_attacks, current_turn, running
     with lock:
-        if active_connections == 0:  # Ensure both players have left before resetting
-            print("Resetting game state...")
+        if active_connections == 0:  # Sjekk om begge har forlatt
             currentId = "0"
             pos = ["0:False:[]:False:[]:0", "1:False:[]:False:[]:0"]
-            last_attacks = ["", ""]  # Reset attack history
-            current_turn = "0"  # Reset turn to player 0
+            last_attacks = ["", ""]
+            current_turn = "0"
+            running = False  # Stopper hovedløkken
 
 
 def threaded_client(conn):
+    """Håndterer en klientforbindelse i en egen tråd."""
     global currentId, pos, active_connections, last_attacks, current_turn
     with lock:
-        active_connections += 1  # Track active players
+        active_connections += 1
         player_id = currentId
         conn.send(str.encode(player_id))
-        currentId = "1" if currentId == "0" else "0"  # Swap between 0 and 1
+        currentId = "1" if currentId == "0" else "0"
 
     try:
         while True:
             data = conn.recv(2048)
             if not data:
-                break  # Exit loop if client disconnects
+                break
 
-            reply = data.decode('utf-8')
+            reply = data.decode("utf-8")
             arr = reply.split(":")
             id = int(arr[0])
-            nid = 1 - id  # Get opponent ID
+            nid = 1 - id  # Motstanderens ID
             turn = 0
-            
-            # Check if there's a new attack
+
+            # Sjekk om det er et nytt angrep
             if arr[4] != last_attacks[id]:
                 for ship in json.loads(pos[nid].split(":")[2]):
-                    for part in ship[0]:  # List with (x, y) coordinates
+                    for part in ship[0]:  # Liste med (x, y) koordinater
                         if json.loads(arr[4])[-1] == part:
                             current_turn = str(id)
-                            turn = 1 
-                if turn != 1:       
+                            turn = 1
+                if turn != 1:
                     current_turn = str(nid)
-                    
-                last_attacks[id] = arr[4]  # Update last attack
-                
-            # Update player's position
-            arr[5] = current_turn  # Set the current turn state
+
+                last_attacks[id] = arr[4]  # Oppdater siste angrep
+
+            # Oppdater spillerens posisjon
+            arr[5] = current_turn
             pos[id] = ":".join(arr)
 
-            # Send updated opponent data
+            # Send oppdatert data til motstanderen
             conn.sendall(str.encode(pos[nid]))
 
     except Exception as e:
@@ -84,16 +84,23 @@ def threaded_client(conn):
 
     print("Connection Closed")
     with lock:
-        active_connections -= 1  # Decrease active players count
+        active_connections -= 1  # Reduser antall aktive spillere
 
-    reset_game()  # Check if the game should reset
-    print(f"Server IP address: {server}")
+    reset_game()  # Sjekk om spillet skal resettes
     conn.close()
-    sys.exit()  # Exit the program
 
 
-# Main loop to handle client connections
-while True:
-    conn, addr = s.accept()
-    print(f"Connected to: {addr}")
-    start_new_thread(threaded_client, (conn,))
+# Hovedløkken for å håndtere klientforbindelser
+while running:
+    try:
+        s.settimeout(1)  # Unngå at accept() blokkerer evig
+        conn, addr = s.accept()
+        print(f"Connected to: {addr}")
+        start_new_thread(threaded_client, (conn,))
+    except socket.timeout:
+        pass  # Fortsett løkken hvis det ikke er nye tilkoblinger
+
+# Når hovedløkken stopper, lukk serveren riktig
+print("Shutting down server...")
+s.close()
+sys.exit()
