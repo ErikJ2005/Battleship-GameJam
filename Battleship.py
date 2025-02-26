@@ -1,4 +1,4 @@
-import pygame
+import pygame, socket
 from state import State
 from network import Network
 import json  # Import JSON module
@@ -52,9 +52,14 @@ class BattleShips(State):
     def __init__(self, spill):
         super().__init__(spill)
         self.bg = pygame.image.load("images/battleship_bg.jpg")
+        self.ship_image = pygame.image.load("images/ship.png")
+        self.hit_image = pygame.image.load("images/hit.png")
+        self.miss_image = pygame.image.load("images/miss.png")
+        
         self.bg = pygame.transform.scale(self.bg, (1200, 600))
-        self.spill.screen.fill((173, 216, 230))  # Light blue background
-        self.net = None  
+        self.font = pygame.font.Font(None, 24)
+        
+        self.net = None
         try:
             self.net = Network(self.spill.ip)   
         except:
@@ -70,8 +75,6 @@ class BattleShips(State):
 
         self.grid_size = 10
         self.cell_size = 40
-        self.font = pygame.font.Font(None, 24)
-        self.orientation = "horizontal"
         
         self.board = [[0 for _ in range(self.grid_size)] for _ in range(self.grid_size)]
         self.enemy_board = [[0 for _ in range(self.grid_size)] for _ in range(self.grid_size)]
@@ -81,18 +84,21 @@ class BattleShips(State):
         
         self.my_turn = False
         self.game_ready = False  
-        self.attack_phase = False  
-        self.ship_sizes = [2, 3, 3, 4, 5]  # Different ship sizes
-        self.ship_index = 0  # Track which ship is being placed
+        self.attack_phase = False 
+        self.text_turn = ""
+        
+        self.ship_sizes = [2, 3, 3, 4, 5] 
+        self.orientation = "horizontal" 
+        self.ship_index = 0  
         self.loaded_ships = False
         self.ship_sunk = 0
+        
         self.received_ships = []
-        self.counter = 0
-        self.text_turn = ""
+        
     
     def send_data(self, ships, attacks):
         try:
-            ships_str = json.dumps(ships)  # Convert list to JSON string
+            ships_str = json.dumps(ships)
             attacks_str = json.dumps(attacks)  
             
             ships_placed = len(self.player.ships) == 5
@@ -234,33 +240,70 @@ class BattleShips(State):
         # Calculate hovered cells using the current orientation
         hovered_cells = self.get_hovered_cells(mouse_x, mouse_y)
         
+        for y in range(self.grid_size):
+            for x in range(self.grid_size):
+                cell_x = self.grid_offset_x + (x * self.cell_size)
+                cell_y = self.grid_offset_y + (y * self.cell_size)
+                
+                pygame.draw.rect(self.spill.screen, (0, 0, 0), (cell_x, cell_y, self.cell_size, self.cell_size), 1)
+                
+        for ship in self.player.ships:
+            positions, orientation = ship
+            first_x, first_y = positions[0]
+
+            # Skalér bildet for å dekke hele skipet
+            ship_width = self.cell_size * len(positions)
+            ship_height = ship_width//5
+
+            ship_image = pygame.transform.scale(self.ship_image, (ship_width, ship_height))
+
+            # Roter bildet hvis nødvendig
+            if orientation == "vertical":
+                ship_image = pygame.transform.rotate(ship_image, 90)
+                
+            # Beregn posisjon på skjermen
+            cell_x = self.grid_offset_x + (first_x * self.cell_size) + ((self.cell_size-ship_height)//2 if orientation == "vertical" else 0)
+            cell_y = self.grid_offset_y + (first_y * self.cell_size) + ((self.cell_size-ship_height)//2 if orientation == "horizontal" else 0)
+
+            if orientation == "vertical":
+                self.spill.screen.blit(ship_image, (cell_x, cell_y))
+            if orientation == "horizontal":
+                self.spill.screen.blit(ship_image, (cell_x, cell_y))
+        
         # Print brettene
         for y in range(self.grid_size):
             for x in range(self.grid_size):
                 cell_x = self.grid_offset_x + (x * self.cell_size)
                 cell_y = self.grid_offset_y + (y * self.cell_size)
                 
+                hit_image = pygame.transform.scale(self.hit_image, (self.cell_size-8, self.cell_size-8))
+                miss_image = pygame.transform.scale(self.miss_image, (self.cell_size-8, self.cell_size-8))
+                
                 # Tegn spillerens rutenett
-                color = self.get_cell_color(self.board[y][x], True)
-                pygame.draw.rect(self.spill.screen, color, (cell_x, cell_y, self.cell_size, self.cell_size), 1 if color == (0, 0, 0) else 0)
-                pygame.draw.rect(self.spill.screen, (0, 0, 0), (cell_x, cell_y, self.cell_size, self.cell_size), 1)
+                if self.board[y][x] == 2:
+                    self.spill.screen.blit(hit_image, (cell_x+4, cell_y+4))
+                if self.board[y][x] == 3:
+                    self.spill.screen.blit(miss_image, (cell_x+4, cell_y+4))
 
                 # Tegn fiendens rutenett
                 enemy_x = self.grid_offset_x + self.grid_size * self.cell_size + 40 + (x * self.cell_size)
-                enemy_color = self.get_cell_color(self.enemy_board[y][x], False)
-                pygame.draw.rect(self.spill.screen, enemy_color, (enemy_x, cell_y, self.cell_size, self.cell_size), 1 if enemy_color == (0, 0, 0) else 0)
+                
+                if self.enemy_board[y][x] == 2:
+                    self.spill.screen.blit(hit_image, (enemy_x+4, cell_y+4))
+                if self.enemy_board[y][x] == 3:
+                    self.spill.screen.blit(miss_image, (enemy_x+4, cell_y+4))
                 pygame.draw.rect(self.spill.screen, (0, 0, 0), (enemy_x, cell_y, self.cell_size, self.cell_size), 1)
 
-        # Draw hovered cells
+        # Tegner rutene skipet vil bli plassert
         if hovered_cells:
             for (x, y) in hovered_cells:
                 cell_x = self.grid_offset_x + (x * self.cell_size)
                 cell_y = self.grid_offset_y + (y * self.cell_size)
                 overlay = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
-                overlay.fill((150, 150, 150, 128))  # Semi-transparent green
+                overlay.fill((150, 150, 150, 128))  # gjennomsiktig grå farge
                 self.spill.screen.blit(overlay, (cell_x, cell_y))
 
-        # Tegn statusmelding
+        # Status meldinger
         if not self.game_ready:
             text = "Waiting for opponent..."
             self.draw_text(text, 70, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
@@ -271,7 +314,7 @@ class BattleShips(State):
             text = "Time to battle!!"
             self.draw_text(text, 70, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
         
-        # tegn text
+        # Info text
         if not self.attack_phase:
             self.draw_text(self.spill.pressed_actions["rotate"] if len(self.player.ships) < 5 else "You have placed all your ships", 40, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - 120)
         else:
@@ -279,13 +322,5 @@ class BattleShips(State):
         
         self.draw_text(f"ships sunk: {self.ship_sunk}", 50, (0, 0, 0), self.spill.screen.get_width() // 2, 30)
         
-        
-    # Få fargen til ruten basert på hva som står der
-    def get_cell_color(self, cell_value, is_player_board):
-        if cell_value == 1:
-            return (100, 100, 100) if is_player_board else (0, 0, 0)  # Player ships are green
-        elif cell_value == 2:
-            return (139, 0, 0)  # Hit
-        elif cell_value == 3:
-            return (0, 0, 139)  # Miss
-        return (0, 0, 0)
+        if self.player.player_id == 0:
+            self.draw_text(f"Join ip: {self.spill.ip}", 40, (0,0,0), 150, 20)

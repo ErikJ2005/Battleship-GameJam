@@ -1,7 +1,5 @@
+import pygame, subprocess, socket
 from state import State
-import pygame
-from network import Network
-import socket
 
 class TextInput(State):
     def __init__(self, spill, x, y, width, height, font_size=30, text_color=(0, 0, 0), bg_color=(200, 200, 200), border_color=(0, 0, 0)):
@@ -37,8 +35,19 @@ class TextInput(State):
         pygame.draw.rect(screen, self.bg_color, self.rect)
         pygame.draw.rect(screen, self.border_color, self.rect, 1)
         text_surface = self.font.render(self.text, True, self.text_color)
-        screen.blit(text_surface, (self.rect.x + (200 - text_surface.get_width())//2, self.rect.y + (40-text_surface.get_height())//2))
+        screen.blit(text_surface, (self.rect.x + (self.rect.width - text_surface.get_width())//2, self.rect.y + (self.rect.height-text_surface.get_height())//2))
     
+class Button(State):
+    def __init__(self, spill, x : int, y : int, width : int, height : int, text : str):
+        super().__init__(spill)
+        self.rect = pygame.Rect(x-width//2, y-height//2, width, height)
+        self.font = pygame.font.Font(None, height-1)
+        self.text = text
+        
+    def render(self, screen):
+        pygame.draw.rect(screen, (200, 200, 200), self.rect)
+        button_text = self.font.render(self.text, True, (0, 0, 0))
+        screen.blit(button_text, (self.rect.x + (self.rect.width-button_text.get_width())//2, self.rect.y + (self.rect.height-button_text.get_height())//2))
 
 class MainMenu(State):
     def __init__(self, spill):
@@ -48,15 +57,22 @@ class MainMenu(State):
         self.color = (200, 200, 200)
         self.bg = pygame.image.load("images/battleship_bg.jpg")
         self.bg = pygame.transform.scale(self.bg, (1200, 600))
-        self.text_input = TextInput(spill,self.spill.screen.get_width()//2-200//2, self.spill.screen.get_height()//2-40//2+100, 200, 40)
-        self.x = 1200
+        self.text_input = TextInput(spill,self.spill.screen.get_width()//2-100, self.spill.screen.get_height()//2-40//2+100, 200, 40)
+        self.host_game = Button(spill, self.spill.screen.get_width()//2, self.spill.screen.get_height()//2, 300, 50, "Host game")
         
+    def start_host(self):
+        with open("host.py") as f:
+            exec(f.read())
 
     def update(self):
+        if self.host_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+            subprocess.Popen(["python", "host.py"])
+            self.spill.ip = socket.gethostbyname(socket.gethostname())
+            self.spill.change_state("battleship")
         self.text_input.update()
 
     def render(self):
         self.spill.screen.blit(self.bg, (0,0))
         self.text_input.render(self.spill.screen)
-        
+        self.host_game.render(self.spill.screen)
         

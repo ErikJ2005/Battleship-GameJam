@@ -1,9 +1,8 @@
-# https://github.com/ErikJ2005/Battleship-GameJam.git
-
 import socket
 from _thread import *
-import threading
+import threading, time
 import json
+import sys  # For shutting down the server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -18,12 +17,12 @@ try:
 except socket.error as e:
     print(str(e))
 
-s.listen(2)
+s.listen(2)  # Set the max number of players to 2
 print("Waiting for a connection")
 
 currentId = "0"
 pos = ["0:False:[]:False:[]:0", "1:False:[]:False:[]:0"]
-active_connections = 0
+active_connections = 0  # Tracks number of active players
 lock = threading.Lock()  # Prevent race conditions when modifying shared variables
 last_attacks = ["", ""]  # Store the last attack of each player
 current_turn = "0"  # Track whose turn it is (0 or 1)
@@ -40,6 +39,7 @@ def reset_game():
             last_attacks = ["", ""]  # Reset attack history
             current_turn = "0"  # Reset turn to player 0
 
+
 def threaded_client(conn):
     global currentId, pos, active_connections, last_attacks, current_turn
     with lock:
@@ -52,7 +52,7 @@ def threaded_client(conn):
         while True:
             data = conn.recv(2048)
             if not data:
-                break  # Exit loop on client disconnection
+                break  # Exit loop if client disconnects
 
             reply = data.decode('utf-8')
             arr = reply.split(":")
@@ -63,7 +63,7 @@ def threaded_client(conn):
             # Check if there's a new attack
             if arr[4] != last_attacks[id]:
                 for ship in json.loads(pos[nid].split(":")[2]):
-                    for part in ship[0]: # liste med int (x og y kordinat)
+                    for part in ship[0]:  # List with (x, y) coordinates
                         if json.loads(arr[4])[-1] == part:
                             current_turn = str(id)
                             turn = 1 
@@ -79,7 +79,6 @@ def threaded_client(conn):
             # Send updated opponent data
             conn.sendall(str.encode(pos[nid]))
 
-
     except Exception as e:
         print(f"Error: {e}")
 
@@ -90,8 +89,11 @@ def threaded_client(conn):
     reset_game()  # Check if the game should reset
     print(f"Server IP address: {server}")
     conn.close()
+    sys.exit()  # Exit the program
 
+
+# Main loop to handle client connections
 while True:
     conn, addr = s.accept()
-    print("Connected to:", addr)
+    print(f"Connected to: {addr}")
     start_new_thread(threaded_client, (conn,))

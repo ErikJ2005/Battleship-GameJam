@@ -1,3 +1,5 @@
+#https://github.com/ErikJ2005/Battleship-GameJam.git
+
 import pygame
 from mainmenu import MainMenu
 from battleship import BattleShips
@@ -50,7 +52,6 @@ class Main:
                     self.pressed_actions["backspace"] = True
                 else:
                     self.pressed_actions["key"] = [True, event.unicode]
-
 
     def update(self):
         self.state.update()
