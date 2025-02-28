@@ -20,7 +20,7 @@ class Player(State):
         self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - 40) // 2
         self.grid_offset_y = 50
 
-    def place_ship(self, board, x, y, orientation, ship_size):
+    def place_ship(self, board : list, x : int, y : int, orientation : str, ship_size : int) -> bool:
         if not self.ships_placed:
             if 0 <= x < 10 and 0 <= y < 10:
                 new_positions = []
@@ -49,7 +49,7 @@ class Player(State):
             
         return False
     
-    def attack(self, enemy_board):
+    def attack(self, enemy_board : list):
         x, y = self.spill.pressed_actions["mouse"][1]
         grid_x, grid_y = (x - self.grid_offset_x - (self.grid_size * self.cell_size + 40)) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
 
@@ -64,7 +64,7 @@ class Player(State):
                     enemy_board[grid_y][grid_x] = 3  # Marker som bom 
                 self.my_turn = False
     
-    def all_ships_sunk(self):
+    def all_ships_sunk(self) -> bool:
         # sjekker om alle skip har sunket
         for row in self.board:
             if 1 in row:
@@ -117,7 +117,7 @@ class BattleShips(State):
         self.ship_index = 0  
         self.ship_sunk = 0
         
-    def send_data(self, ships, attacks):
+    def send_data(self, ships : list, attacks : list) -> str:
         try:
             ships_str = json.dumps(ships)
             attacks_str = json.dumps(attacks)  
@@ -130,12 +130,12 @@ class BattleShips(State):
             print(f"Error sending data: {e}")
             return None 
         
-    def draw_text(self, text : str, size : int, color : tuple, x, y):
+    def draw_text(self, text : str, size : int, color : tuple, x: int, y : int):
         font  = pygame.font.Font(None, size)
         info = font.render(text, True, color)
         self.spill.screen.blit(info, (x - info.get_width() // 2,y - info.get_height() // 2))
         
-    def ships_sunk(self, received_ships):
+    def ships_sunk(self, received_ships : list):
         # sjekk hvor mange skip har sunket
         for index , ships in enumerate(received_ships):
             for attacks in self.player.attacked_positions:
@@ -224,7 +224,7 @@ class BattleShips(State):
         except Exception as e:
             print(f"Error handling data: {data_parts}")
 
-    def get_hovered_cells(self, mouse_x, mouse_y):
+    def get_hovered_cells(self, mouse_x : int, mouse_y  : int) -> list:
         """Calculate the cells that the ship will occupy based on the mouse position."""
         if not self.game_ready or self.attack_phase or self.ship_index >= len(self.ship_sizes):
             return []
