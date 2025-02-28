@@ -9,6 +9,8 @@ class Main:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((1200, 600))
+        self.width = self.screen.get_width()
+        self.height = self.screen.get_height()
         self.pressed_actions = {"mouse": [False, (0, 0)], "enter" : False, "key" : [False,""], "backspace" : False, "rotate" : "horizontal"}
         self.ip = ""
         self.winner = ""
