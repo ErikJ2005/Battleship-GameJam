@@ -1,41 +1,5 @@
 import pygame, subprocess, socket
 from state import State
-
-class TextInput(State):
-    def __init__(self, spill, x, y, width, height, font_size=30, text_color=(0, 0, 0), bg_color=(200, 200, 200), border_color=(0, 0, 0)):
-        super().__init__(spill)
-        self.rect = pygame.Rect(x, y, width, height)
-        self.font = pygame.font.Font(None, font_size)
-        self.text = ""
-        self.text_color = text_color
-        self.bg_color = bg_color
-        self.border_color = border_color
-        self.active = False
-        self.x = 0
-        self.y = 0
-        
-    def update(self):
-        if self.spill.pressed_actions["mouse"][1] is not None:
-            self.x, self.y = self.spill.pressed_actions["mouse"][1]
-
-        if self.rect.collidepoint(self.x, self.y):
-            if self.spill.pressed_actions["enter"]:
-                self.spill.ip = self.text
-                self.spill.pressed_actions["mouse"][1] = (0, 0)
-                self.spill.change_state("battleship")
-                self.spill.pressed_actions["enter"] = False  # Reset after processing
-            elif self.spill.pressed_actions["backspace"]:
-                self.text = self.text[:-1]
-                self.spill.pressed_actions["backspace"] = False  # Reset after processing
-            elif self.spill.pressed_actions["key"][0]:
-                self.text += self.spill.pressed_actions["key"][1]
-                self.spill.pressed_actions["key"][0] = False  # Reset after processing
-
-    def render(self, screen):
-        pygame.draw.rect(screen, self.bg_color, self.rect)
-        pygame.draw.rect(screen, self.border_color, self.rect, 1)
-        text_surface = self.font.render(self.text, True, self.text_color)
-        screen.blit(text_surface, (self.rect.x + (self.rect.width - text_surface.get_width())//2, self.rect.y + (self.rect.height-text_surface.get_height())//2))
     
 class Button(State):
     def __init__(self, spill, x : int, y : int, width : int, height : int, text : str):
@@ -52,13 +16,15 @@ class Button(State):
 class MainMenu(State):
     def __init__(self, spill):
         super().__init__(spill)
+        self.UDP_PORT = 50000
+        self.TIMEOUT = 4
         self.button_height = 20
         self.button_width = 100
         self.color = (200, 200, 200)
         self.bg = pygame.image.load("images/battleship_bg.jpg")
         self.bg = pygame.transform.scale(self.bg, (1200, 600))
-        self.text_input = TextInput(spill,self.spill.screen.get_width()//2-100, self.spill.screen.get_height()//2-40//2+100, 200, 40)
         self.host_game = Button(spill, self.spill.screen.get_width()//2, self.spill.screen.get_height()//2, 300, 50, "Host game")
+        self.join_game = Button(spill, self.spill.screen.get_width()//2, self.spill.screen.get_height()//2+100, 300, 50, "Join game")
         
     def start_host(self):
         with open("host.py") as f:
@@ -69,10 +35,33 @@ class MainMenu(State):
             subprocess.Popen(["python", "host.py"])
             self.spill.ip = socket.gethostbyname(socket.gethostname())
             self.spill.change_state("battleship")
-        self.text_input.update()
+            
+        if self.join_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+            # Listen for UDP broadcasts
+            udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            udp_sock.bind(("", self.UDP_PORT))
+            
+            udp_sock.settimeout(self.TIMEOUT)
+
+            print("Waiting for server broadcast...")
+            
+            try:
+                data, addr = udp_sock.recvfrom(1024)
+                message = data.decode()
+                print(f"Received: {message}")
+
+                # Extract server IP and TCP port
+                _, self.text, server_port = message.split(":")
+                
+                self.spill.ip = self.text
+                self.spill.change_state("battleship")
+            except:
+                print("Couldn't connect to a server")
+                self.spill.pressed_actions["mouse"][1] = (0,0)
 
     def render(self):
         self.spill.screen.blit(self.bg, (0,0))
-        self.text_input.render(self.spill.screen)
+        self.join_game.render(self.spill.screen)
         self.host_game.render(self.spill.screen)
         

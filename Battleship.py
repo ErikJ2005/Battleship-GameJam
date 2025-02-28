@@ -1,16 +1,24 @@
-import pygame, socket
+import pygame
 from state import State
 from network import Network
 import json  # Import JSON module
 
-class Player:
-    def __init__(self, player_id):
+class Player(State):
+    def __init__(self, spill, player_id):
+        super().__init__(spill)
         self.player_id = player_id
         self.ships = []  # List of ships with position, size, and health
         self.attacked_positions = []
         self.ships_placed = False  # Track if the player has placed all ships
         self.grid_size = 10
         self.cell_size = 40
+        
+        self.board = [[0 for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        
+        self.my_turn = False
+        
+        self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - 40) // 2
+        self.grid_offset_y = 50
 
     def place_ship(self, board, x, y, orientation, ship_size):
         if not self.ships_placed:
@@ -41,15 +49,30 @@ class Player:
             
         return False
     
-    def all_ships_sunk(self, board):
+    def attack(self, enemy_board):
+        x, y = self.spill.pressed_actions["mouse"][1]
+        grid_x, grid_y = (x - self.grid_offset_x - (self.grid_size * self.cell_size + 40)) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
+
+        # Sjekk at spilleren kun angriper motstanderens brett
+        if 0 <= grid_x < self.grid_size and 0 <= grid_y < self.grid_size:
+            if [grid_x, grid_y] not in self.attacked_positions:
+                self.attacked_positions.append([grid_x, grid_y])
+                
+                if enemy_board[grid_y][grid_x] == 1:  # Treffer et skip
+                    enemy_board[grid_y][grid_x] = 2  # Marker som truffet
+                else:
+                    enemy_board[grid_y][grid_x] = 3  # Marker som bom 
+                self.my_turn = False
+    
+    def all_ships_sunk(self):
         # sjekker om alle skip har sunket
-        for row in board:
+        for row in self.board:
             if 1 in row:
                 return False
         return True
-
+    
 class BattleShips(State):
-    def __init__(self, spill):
+    def __init__(self, spill, networking):
         super().__init__(spill)
         self.bg = pygame.image.load("images/battleship_bg.jpg")
         self.ship_image = pygame.image.load("images/ship.png")
@@ -59,43 +82,41 @@ class BattleShips(State):
         self.bg = pygame.transform.scale(self.bg, (1200, 600))
         self.font = pygame.font.Font(None, 24)
         
-        self.net = None
-        try:
-            self.net = Network(self.spill.ip)   
-        except:
-            if hasattr(self.spill, "states"):
-                self.spill.change_state("mainmenu")  
-                return  
-        
-        if self.net:  
-            self.player = Player(int(self.net.id))
-            self.player2 = Player(1-int(self.net.id))
-        else:
-            self.player = None  
+        if networking:
+            self.net = None
+            try:
+                self.net = Network(self.spill.ip)   
+            except:
+                if hasattr(self.spill, "states"):
+                    self.spill.change_state("mainmenu")  
+                    return  
+            
+            if self.net:  
+                self.player = Player(spill,int(self.net.id))
+                self.player2 = Player(spill,1-int(self.net.id))
+            else:
+                self.player = None  
+            
+            self.received_ships = []
+            
+            self.game_ready = False # Er True hvis to spillere har blitt med
+            self.loaded_ships = False # Er True når alle skipene er plassert
+            
+            self.text_turn = "" # Sier hvem sin tur det er
 
         self.grid_size = 10
         self.cell_size = 40
         
-        self.board = [[0 for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        self.enemy_board = [[0 for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        
         self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - 40) // 2
         self.grid_offset_y = 50
         
-        self.my_turn = False
-        self.game_ready = False  
         self.attack_phase = False 
-        self.text_turn = ""
         
         self.ship_sizes = [2, 3, 3, 4, 5] 
         self.orientation = "horizontal" 
         self.ship_index = 0  
-        self.loaded_ships = False
         self.ship_sunk = 0
         
-        self.received_ships = []
-        
-    
     def send_data(self, ships, attacks):
         try:
             ships_str = json.dumps(ships)
@@ -113,7 +134,17 @@ class BattleShips(State):
         font  = pygame.font.Font(None, size)
         info = font.render(text, True, color)
         self.spill.screen.blit(info, (x - info.get_width() // 2,y - info.get_height() // 2))
-
+        
+    def ships_sunk(self, received_ships):
+        # sjekk hvor mange skip har sunket
+        for index , ships in enumerate(received_ships):
+            for attacks in self.player.attacked_positions:
+                if attacks in ships[0]:
+                    ships[0].remove(attacks)
+            if len(ships[0]) == 0:
+                self.ship_sunk += 1
+                self.received_ships.pop(index)
+                
     def update(self):
         try:
             # Update orientation when "R" is pressed
@@ -129,9 +160,9 @@ class BattleShips(State):
             data_parts = received_data.split(":")
             
             if data_parts[5] == f"{self.player.player_id}":
-                self.my_turn = True
+                self.player.my_turn = True
             else:
-                self.my_turn = False
+                self.player.my_turn = False
 
             # plassering av skip
             if data_parts[1] == "True":
@@ -141,30 +172,17 @@ class BattleShips(State):
                     grid_x, grid_y = (x - self.grid_offset_x) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
                     self.spill.pressed_actions["mouse"][0] = False
                     
-                    if self.player.place_ship(self.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
+                    if self.player.place_ship(self.player.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
                         self.ship_index += 1  # Gå videre til neste skip
                         
                     else:
                         print("Kan ikke plassere skipet her!") 
             
             # Håndter angrep
-            if self.my_turn:
+            if self.player.my_turn:
                 self.text_turn = "Attack the other player board"
                 if self.spill.pressed_actions["mouse"][0] and self.loaded_ships:
-                    x, y = self.spill.pressed_actions["mouse"][1]
-                    grid_x, grid_y = (x - self.grid_offset_x - (self.grid_size * self.cell_size + 40)) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
-
-                    # Sjekk at spilleren kun angriper motstanderens brett
-                    if 0 <= grid_x < self.grid_size and 0 <= grid_y < self.grid_size:
-                        if [grid_x, grid_y] not in self.player.attacked_positions:
-                            self.player.attacked_positions.append([grid_x, grid_y])
-                            
-                            if self.enemy_board[grid_y][grid_x] == 1:  # Treffer et skip
-                                self.enemy_board[grid_y][grid_x] = 2  # Marker som truffet
-                            else:
-                                self.enemy_board[grid_y][grid_x] = 3  # Marker som bom 
-                            self.my_turn = False
-                            
+                    self.player.attack(self.player2.board)
                     self.spill.pressed_actions["mouse"][0] = False  # Nullstill klikk
             else:
                 self.spill.pressed_actions["mouse"][1] = (0, 0)
@@ -177,34 +195,27 @@ class BattleShips(State):
                 print("ships placed")
                 self.received_ships = json.loads(data_parts[2])  # Convert JSON string back to list
                 for i in range(5):
-                    self.player2.place_ship(self.enemy_board, self.received_ships[i][0][0][0], self.received_ships[i][0][0][1], self.received_ships[i][1],self.ship_sizes[i])
+                    self.player2.place_ship(self.player2.board, self.received_ships[i][0][0][0], self.received_ships[i][0][0][1], self.received_ships[i][1],self.ship_sizes[i])
                 
             received_attacks = json.loads(data_parts[4])  
             
             # Sjekker hva motstanderen traff
             for attacks in received_attacks:
                 y, x = attacks
-                if self.board[x][y] == 0:
-                    self.board[x][y] = 3
-                elif self.board[x][y] == 1:
-                    self.board[x][y] = 2
-            
-            # sjekk hvor mange skip har sunket
-            for index , ships in enumerate(self.received_ships):
-                for attacks in self.player.attacked_positions:
-                    if attacks in ships[0]:
-                        ships[0].remove(attacks)
-                if len(ships[0]) == 0:
-                    self.ship_sunk += 1
-                    self.received_ships.pop(index)
-            
+                if self.player.board[x][y] == 0:
+                    self.player.board[x][y] = 3
+                elif self.player.board[x][y] == 1:
+                    self.player.board[x][y] = 2
+                    
+            self.ships_sunk(self.received_ships)
+
             # Sjekker om en spiller har vunnet
-            if self.player.all_ships_sunk(self.board) and self.loaded_ships:
+            if self.player.all_ships_sunk() and self.loaded_ships:
                 self.send_data(self.player.ships, self.player.attacked_positions)
                 self.net.disconnect()
                 self.spill.change_state("endscreen")
                 self.spill.winner = "You lost!"
-            if self.player2.all_ships_sunk(self.enemy_board) and self.loaded_ships:
+            if self.player2.all_ships_sunk() and self.loaded_ships:
                 self.send_data(self.player.ships, self.player.attacked_positions)
                 self.net.disconnect()
                 self.spill.change_state("endscreen")
@@ -280,17 +291,17 @@ class BattleShips(State):
                 miss_image = pygame.transform.scale(self.miss_image, (self.cell_size-8, self.cell_size-8))
                 
                 # Tegn spillerens rutenett
-                if self.board[y][x] == 2:
+                if self.player.board[y][x] == 2:
                     self.spill.screen.blit(hit_image, (cell_x+4, cell_y+4))
-                if self.board[y][x] == 3:
+                if self.player.board[y][x] == 3:
                     self.spill.screen.blit(miss_image, (cell_x+4, cell_y+4))
 
                 # Tegn fiendens rutenett
                 enemy_x = self.grid_offset_x + self.grid_size * self.cell_size + 40 + (x * self.cell_size)
                 
-                if self.enemy_board[y][x] == 2:
+                if self.player2.board[y][x] == 2:
                     self.spill.screen.blit(hit_image, (enemy_x+4, cell_y+4))
-                if self.enemy_board[y][x] == 3:
+                if self.player2.board[y][x] == 3:
                     self.spill.screen.blit(miss_image, (enemy_x+4, cell_y+4))
                 pygame.draw.rect(self.spill.screen, (0, 0, 0), (enemy_x, cell_y, self.cell_size, self.cell_size), 1)
 

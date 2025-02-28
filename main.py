@@ -15,7 +15,7 @@ class Main:
         self.font = pygame.font.Font(None, 32)
         self.states = {
             "mainmenu": MainMenu(self),
-            "battleship": BattleShips(self),
+            "battleship": BattleShips(self, True),
             "endscreen": EndScreen(self),
         }
         self.change_state("mainmenu")
@@ -23,7 +23,10 @@ class Main:
     
     def change_state(self, state):
         self.state = self.states[state]
-        self.state.__init__(self)
+        if state == "battleship":
+            self.state.__init__(self, True)
+        else:
+            self.state.__init__(self)
     
     def main_loop(self):
         self.handle_input()

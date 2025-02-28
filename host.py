@@ -2,7 +2,7 @@ import socket
 from _thread import *
 import threading
 import json
-import sys
+import sys, time
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server = socket.gethostbyname(socket.gethostname())
@@ -26,6 +26,22 @@ last_attacks = ["", ""]
 current_turn = "0"
 running = True  # Kontrollerer hovedløkken
 
+BROADCAST_IP = "255.255.255.255"
+brodcasting = True
+
+
+def udp_broadcast():
+    global brodcasting
+    """Broadcasts the server IP over UDP."""
+    udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    
+    message = f"SERVER:{socket.gethostbyname(socket.gethostname())}:5555".encode()
+    while brodcasting:
+        udp_sock.sendto(message, (BROADCAST_IP, 50000))
+        print("Broadcasting server IP...")
+        time.sleep(2)  # Send every 2 seconds
+
 
 def reset_game():
     """Resetter spillet og avslutter serveren hvis ingen spillere er igjen."""
@@ -41,12 +57,14 @@ def reset_game():
 
 def threaded_client(conn):
     """Håndterer en klientforbindelse i en egen tråd."""
-    global currentId, pos, active_connections, last_attacks, current_turn
+    global currentId, pos, active_connections, last_attacks, current_turn, brodcasting
     with lock:
         active_connections += 1
         player_id = currentId
         conn.send(str.encode(player_id))
         currentId = "1" if currentId == "0" else "0"
+        if active_connections == 2:
+            brodcasting = False
 
     try:
         while True:
@@ -90,6 +108,7 @@ def threaded_client(conn):
     conn.close()
 
 
+threading.Thread(target=udp_broadcast, daemon=True).start()
 # Hovedløkken for å håndtere klientforbindelser
 while running:
     try:
