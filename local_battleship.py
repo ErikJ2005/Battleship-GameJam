@@ -1,3 +1,6 @@
+# https://github.com/Ex1118/Battleship-GameJam.git
+
+
 from battleship import Player, BattleShips
 import random
 import pygame
@@ -103,22 +106,22 @@ class LocalBattleships(BattleShips):
         ship_attack_pos = []
         ship_size_pos = []
         ship_sunk_index = []
-        lokal_defender = json.loads(json.dumps(defender.ships))
-        for battleship in range(len(lokal_defender)):
+        local_defender = json.loads(json.dumps(defender.ships))
+        for battleship in range(len(local_defender)):
             for attack in attacker.attacked_positions:
-                if attack in lokal_defender[battleship][0]:
+                if attack in local_defender[battleship][0]:
                     if attack not in attacker.good_attacks:
                         attacker.good_attacks.append(attack)
                         
-        for battleship in range(len(lokal_defender)):
-            ship_size_pos.append(len(lokal_defender[battleship][0]))
+        for battleship in range(len(local_defender)):
+            ship_size_pos.append(len(local_defender[battleship][0]))
             ship_attack_pos.append([])
             for attack in attacker.good_attacks:
-                if attack in lokal_defender[battleship][0]:
+                if attack in local_defender[battleship][0]:
                     ship_attack_pos[battleship].append(attack)
-                    lokal_defender[battleship][0].remove(attack)
+                    local_defender[battleship][0].remove(attack)
                 
-            if len(lokal_defender[battleship][0]) == 0:
+            if len(local_defender[battleship][0]) == 0:
                 ship_sunk_index.append(battleship)
                 ship_sunk += 1
         return [ship_sunk, json.loads(json.dumps(defender.player_id)), ship_size_pos, ship_sunk_index, ship_attack_pos]
