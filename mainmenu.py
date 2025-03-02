@@ -23,8 +23,9 @@ class MainMenu(State):
         self.color = (200, 200, 200)
         self.bg = pygame.image.load("images/battleship_bg.jpg")
         self.bg = pygame.transform.scale(self.bg, (1200, 600))
-        self.host_game = Button(spill, self.spill.screen.get_width()//2, self.spill.screen.get_height()//2, 300, 50, "Host game")
-        self.join_game = Button(spill, self.spill.screen.get_width()//2, self.spill.screen.get_height()//2+100, 300, 50, "Join game")
+        self.host_game = Button(spill, self.spill.screen.get_width()//2, self.spill.screen.get_height()//2-100, 300, 50, "Host game")
+        self.join_game = Button(spill, self.spill.screen.get_width()//2, self.spill.screen.get_height()//2, 300, 50, "Join game")
+        self.singleplayer = Button(spill, self.spill.screen.get_width()//2, self.spill.screen.get_height()//2+100, 300, 50, "Singleplayer")
         
     def start_host(self):
         with open("host.py") as f:
@@ -45,6 +46,9 @@ class MainMenu(State):
             udp_sock.settimeout(self.TIMEOUT)
 
             print("Waiting for server broadcast...")
+        
+        if self.singleplayer.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+            self.spill.change_state("local_battleship")
             
             try:
                 data, addr = udp_sock.recvfrom(1024)
@@ -64,4 +68,5 @@ class MainMenu(State):
         self.spill.screen.blit(self.bg, (0,0))
         self.join_game.render(self.spill.screen)
         self.host_game.render(self.spill.screen)
+        self.singleplayer.render(self.spill.screen)
         
