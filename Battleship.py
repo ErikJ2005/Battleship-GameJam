@@ -79,7 +79,7 @@ class BattleShips(State):
         self.hit_image = pygame.image.load("images/hit.png")
         self.miss_image = pygame.image.load("images/miss.png")
         
-        self.bg = pygame.transform.scale(self.bg, (1200, 600))
+        self.bg = pygame.transform.scale(self.bg, (self.spill.screen.get_width(), self.spill.screen.get_height()))
         self.font = pygame.font.Font(None, 24)
         
         if networking:
@@ -92,17 +92,17 @@ class BattleShips(State):
                     return  
             
             if self.net:  
-                self.player = Player(spill,int(self.net.id))
-                self.player2 = Player(spill,1-int(self.net.id))
+                self.player = Player(spill, int(self.net.id))
+                self.player2 = Player(spill, 1 - int(self.net.id))
             else:
                 self.player = None  
             
             self.received_ships = []
             
-            self.game_ready = False # Er True hvis to spillere har blitt med
-            self.loaded_ships = False # Er True når alle skipene er plassert
+            self.game_ready = False
+            self.loaded_ships = False
             
-            self.text_turn = "" # Sier hvem sin tur det er
+            self.text_turn = ""
 
         self.grid_size = 10
         self.cell_size = 40
@@ -116,6 +116,11 @@ class BattleShips(State):
         self.orientation = "horizontal" 
         self.ship_index = 0  
         self.ship_sunk = 0
+        
+    def update_grid_offset(self):
+        self.cell_size = self.spill.screen.get_width()//30
+        self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - self.cell_size) // 2
+        self.grid_offset_y = self.spill.screen.get_height()//12
         
     def send_data(self, ships : list, attacks : list) -> str:
         try:
@@ -146,14 +151,14 @@ class BattleShips(State):
                 self.received_ships.pop(index)
                 
     def update(self):
+        self.update_grid_offset()
         try:
-            # Update orientation when "R" is pressed
             if self.spill.pressed_actions["key"][0] and self.spill.pressed_actions["key"][1] == "r":
                 if self.orientation == "horizontal":
                     self.orientation = "vertical"
                 else:
                     self.orientation = "horizontal"
-                self.spill.pressed_actions["key"] = [False, ""]  # Reset key press
+                self.spill.pressed_actions["key"] = [False, ""]
 
             received_data = self.send_data(self.player.ships, self.player.attacked_positions)
             
@@ -164,7 +169,6 @@ class BattleShips(State):
             else:
                 self.player.my_turn = False
 
-            # plassering av skip
             if data_parts[1] == "True":
                 self.game_ready = True
                 if self.spill.pressed_actions["mouse"][0] and len(self.player.ships) < 5:
@@ -173,33 +177,31 @@ class BattleShips(State):
                     self.spill.pressed_actions["mouse"][0] = False
                     
                     if self.player.place_ship(self.player.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
-                        self.ship_index += 1  # Gå videre til neste skip
-                        
+                        self.ship_index += 1
                     else:
                         print("Kan ikke plassere skipet her!") 
+            else:
+                self.spill.pressed_actions["mouse"][1] = (0,0)
             
-            # Håndter angrep
             if self.player.my_turn:
                 self.text_turn = "Attack the other player board"
                 if self.spill.pressed_actions["mouse"][0] and self.loaded_ships:
                     self.player.attack(self.player2.board)
-                    self.spill.pressed_actions["mouse"][0] = False  # Nullstill klikk
+                    self.spill.pressed_actions["mouse"][0] = False
             else:
                 self.spill.pressed_actions["mouse"][1] = (0, 0)
                 self.text_turn = "Hope the oponent doesn't hit you"
                 
-            # sjekker om alle ships er plasert og laster in alle motstander skip en gang
             if data_parts[3] == "True" and not self.loaded_ships and len(self.player.ships) == 5:
                 self.loaded_ships = True
                 self.attack_phase = True
                 print("ships placed")
-                self.received_ships = json.loads(data_parts[2])  # Convert JSON string back to list
+                self.received_ships = json.loads(data_parts[2])
                 for i in range(5):
-                    self.player2.place_ship(self.player2.board, self.received_ships[i][0][0][0], self.received_ships[i][0][0][1], self.received_ships[i][1],self.ship_sizes[i])
+                    self.player2.place_ship(self.player2.board, self.received_ships[i][0][0][0], self.received_ships[i][0][0][1], self.received_ships[i][1], self.ship_sizes[i])
                 
             received_attacks = json.loads(data_parts[4])  
             
-            # Sjekker hva motstanderen traff
             for attacks in received_attacks:
                 y, x = attacks
                 if self.player.board[x][y] == 0:
@@ -209,7 +211,6 @@ class BattleShips(State):
                     
             self.ships_sunk(self.received_ships)
 
-            # Sjekker om en spiller har vunnet
             if self.player.all_ships_sunk() and self.loaded_ships:
                 self.send_data(self.player.ships, self.player.attacked_positions)
                 self.net.disconnect()
@@ -243,12 +244,10 @@ class BattleShips(State):
         return []
 
     def render(self):
+        self.bg = pygame.transform.scale(self.bg, (self.spill.screen.get_width(), self.spill.screen.get_height()))
         self.spill.screen.blit(self.bg, (0, 0))
         
-        # Get mouse position
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        
-        # Calculate hovered cells using the current orientation
         hovered_cells = self.get_hovered_cells(mouse_x, mouse_y)
         
         for y in range(self.grid_size):
@@ -262,76 +261,68 @@ class BattleShips(State):
             positions, orientation = ship
             first_x, first_y = positions[0]
 
-            # Skalér bildet for å dekke hele skipet
             ship_width = self.cell_size * len(positions)
-            ship_height = ship_width//5
+            ship_height = ship_width // 5
 
             ship_image = pygame.transform.scale(self.ship_image, (ship_width, ship_height))
 
-            # Roter bildet hvis nødvendig
             if orientation == "vertical":
                 ship_image = pygame.transform.rotate(ship_image, 90)
                 
-            # Beregn posisjon på skjermen
-            cell_x = self.grid_offset_x + (first_x * self.cell_size) + ((self.cell_size-ship_height)//2 if orientation == "vertical" else 0)
-            cell_y = self.grid_offset_y + (first_y * self.cell_size) + ((self.cell_size-ship_height)//2 if orientation == "horizontal" else 0)
+            cell_x = self.grid_offset_x + (first_x * self.cell_size) + ((self.cell_size - ship_height) // 2 if orientation == "vertical" else 0)
+            cell_y = self.grid_offset_y + (first_y * self.cell_size) + ((self.cell_size - ship_height) // 2 if orientation == "horizontal" else 0)
 
             if orientation == "vertical":
                 self.spill.screen.blit(ship_image, (cell_x, cell_y))
             if orientation == "horizontal":
                 self.spill.screen.blit(ship_image, (cell_x, cell_y))
         
-        # Print brettene
         for y in range(self.grid_size):
             for x in range(self.grid_size):
                 cell_x = self.grid_offset_x + (x * self.cell_size)
                 cell_y = self.grid_offset_y + (y * self.cell_size)
                 
-                hit_image = pygame.transform.scale(self.hit_image, (self.cell_size-8, self.cell_size-8))
-                miss_image = pygame.transform.scale(self.miss_image, (self.cell_size-8, self.cell_size-8))
+                hit_image = pygame.transform.scale(self.hit_image, (self.cell_size - 8, self.cell_size - 8))
+                miss_image = pygame.transform.scale(self.miss_image, (self.cell_size - 8, self.cell_size - 8))
                 
-                # Tegn spillerens rutenett
                 if self.player.board[y][x] == 2:
-                    self.spill.screen.blit(hit_image, (cell_x+4, cell_y+4))
+                    self.spill.screen.blit(hit_image, (cell_x + 4, cell_y + 4))
                 if self.player.board[y][x] == 3:
-                    self.spill.screen.blit(miss_image, (cell_x+4, cell_y+4))
+                    self.spill.screen.blit(miss_image, (cell_x + 4, cell_y + 4))
 
-                # Tegn fiendens rutenett
                 enemy_x = self.grid_offset_x + self.grid_size * self.cell_size + 40 + (x * self.cell_size)
                 
                 if self.player2.board[y][x] == 2:
-                    self.spill.screen.blit(hit_image, (enemy_x+4, cell_y+4))
+                    self.spill.screen.blit(hit_image, (enemy_x + 4, cell_y + 4))
                 if self.player2.board[y][x] == 3:
-                    self.spill.screen.blit(miss_image, (enemy_x+4, cell_y+4))
+                    self.spill.screen.blit(miss_image, (enemy_x + 4, cell_y + 4))
                 pygame.draw.rect(self.spill.screen, (0, 0, 0), (enemy_x, cell_y, self.cell_size, self.cell_size), 1)
 
-        # Tegner rutene skipet vil bli plassert
         if hovered_cells:
             for (x, y) in hovered_cells:
                 cell_x = self.grid_offset_x + (x * self.cell_size)
                 cell_y = self.grid_offset_y + (y * self.cell_size)
                 overlay = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
-                overlay.fill((150, 150, 150, 128))  # gjennomsiktig grå farge
+                overlay.fill((150, 150, 150, 128))
                 self.spill.screen.blit(overlay, (cell_x, cell_y))
+                
 
-        # Status meldinger
         if not self.game_ready:
             text = "Waiting for opponent..."
-            self.draw_text(text, 70, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
+            self.draw_text(text, self.spill.screen.get_height()//8, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - self.spill.screen.get_height()//15)
         elif not self.attack_phase:
             text = "Place your ships! Press 'R' to rotate. sizes of the ships you place are: [2, 3, 3, 4, 5] in that order "
-            self.draw_text(text, 30, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
+            self.draw_text(text, self.spill.screen.get_height()//20, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - self.spill.screen.get_height()//15)
         else:
             text = "Time to battle!!"
-            self.draw_text(text, 70, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
+            self.draw_text(text, self.spill.screen.get_height()//8, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - self.spill.screen.get_height()//15)
         
-        # Info text
         if not self.attack_phase:
-            self.draw_text(self.spill.pressed_actions["rotate"] if len(self.player.ships) < 5 else "You have placed all your ships", 40, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - 120)
+            self.draw_text(self.spill.pressed_actions["rotate"] if len(self.player.ships) < 5 else "You have placed all your ships", self.spill.screen.get_height()//15, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - self.spill.screen.get_height()//5)
         else:
-            self.draw_text(self.text_turn, 40, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - 120)    
+            self.draw_text(self.text_turn, self.spill.screen.get_height()//15, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - 120)    
         
-        self.draw_text(f"ships sunk: {self.ship_sunk}", 50, (0, 0, 0), self.spill.screen.get_width() // 2, 30)
+        self.draw_text(f"ships sunk: {self.ship_sunk}", self.spill.screen.get_height()//12, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height()//20)
         
         if self.player.player_id == 0:
-            self.draw_text(f"Join ip: {self.spill.ip}", 40, (0,0,0), 150, 20)
+            self.draw_text(f"Join ip: {self.spill.ip}", self.spill.screen.get_height()//15, (0, 0, 0), self.spill.screen.get_width()//6, self.spill.screen.get_height()//30)

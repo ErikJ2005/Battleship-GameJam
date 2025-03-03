@@ -1,5 +1,5 @@
 import socket
-from _thread import *
+from _thread import start_new_thread
 import threading
 import json
 import sys, time
