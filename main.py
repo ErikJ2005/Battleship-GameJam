@@ -4,6 +4,7 @@ import pygame
 from mainmenu import MainMenu
 from battleship import BattleShips
 from game_end_screen import EndScreen
+from local_battleship import LocalBattleships
 
 class Main:
     def __init__(self):
@@ -18,12 +19,13 @@ class Main:
         self.states = {
             "mainmenu": MainMenu(self),
             "battleship": BattleShips(self, True),
+            "localbattleships" : LocalBattleships(self),
             "endscreen": EndScreen(self),
         }
         self.change_state("mainmenu")
         self.running = True
     
-    def change_state(self, state):
+    def change_state(self, state : str):
         self.state = self.states[state]
         if state == "battleship":
             self.state.__init__(self, True)

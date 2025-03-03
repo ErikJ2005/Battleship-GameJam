@@ -98,6 +98,9 @@ class MainMenu(State):
         if self.join_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.selected_ip:
             self.spill.ip = self.selected_ip
             self.spill.change_state("battleship")
+        
+        if self.singleplayer_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+            self.spill.change_state("localbattleships")
 
     def render(self):
         """ Draws the menu, buttons, and available servers. """
