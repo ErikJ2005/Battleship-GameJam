@@ -5,12 +5,13 @@ from battleship import Player, BattleShips
 import random
 import pygame
 import json
-
+import time
 
 class Bot(Player):
     def __init__(self, spill):
         super().__init__(spill,1)
         self.destroyed_ships = 0
+        self.good_attacks = []
         self.focus = 0
         self.battle_info = [[]]
         self.ship_sizes = []
@@ -22,52 +23,128 @@ class Bot(Player):
             if self.place_ship(board, random.randint(0, 9), random.randint(0, 9), random.choice(["horizontal", "vertical"]), ship_sizes[i]):
                 i += 1
     
+    def best_attack_location(self, defender: Player):
+        best_attack = []
+        first_quarter = 0
+        first_max = 25
+        second_quarter = 0
+        secound_max = 25
+        third_quarter = 0
+        third_max = 25
+        fourth_quarter = 0
+        foruth_max = 25
+        for x_pos in range(len(defender.board)):
+            for y_pos in range(len(defender.board[x_pos])):
+                if defender.board[y_pos][x_pos] == 3:
+                    if x_pos < 5 and y_pos < 5:
+                        first_quarter += 1
+                    elif x_pos >= 5 and y_pos < 5:
+                        second_quarter += 1
+                    elif x_pos < 5 and y_pos >= 5:
+                        third_quarter += 1
+                    elif x_pos >= 5 and y_pos >= 5:
+                        fourth_quarter += 1
+                elif defender.board[y_pos][x_pos] == 2:
+                    if x_pos < 5 and y_pos < 5:
+                        first_max -= 1
+                    elif x_pos >= 5 and y_pos < 5:
+                        secound_max -= 1
+                    elif x_pos < 5 and y_pos >= 5:
+                        third_max -= 1
+                    elif x_pos >= 5 and y_pos >= 5:
+                        foruth_max -= 1
+            if first_quarter < first_max  and first_quarter < second_quarter and first_quarter < third_quarter and first_quarter < fourth_quarter:
+                best_attack = [random.randint(0,4), random.randint(0,4)]
+            elif second_quarter < secound_max and second_quarter < first_quarter and second_quarter < third_quarter and second_quarter < fourth_quarter:
+                best_attack = [random.randint(5,9), random.randint(0,4)]
+            elif third_quarter < third_max and third_quarter < first_quarter and third_quarter < second_quarter and third_quarter < fourth_quarter:
+                best_attack = [random.randint(0,4), random.randint(5,9)]
+            elif fourth_quarter < foruth_max and fourth_quarter < first_quarter and fourth_quarter < second_quarter and fourth_quarter < third_quarter:
+                best_attack = [random.randint(5,9), random.randint(5,9)]
+            else:
+                best_attack = [random.randint(0,9), random.randint(0,9)]
+        return best_attack
                     
     def attack(self, local_battleships, enemy_board: list, defender: Player):
-        attack_value = 0
-        battle_info = local_battleships.good_attack_checker(self,defender)
+        attack_value = -1
+        self.battle_info = local_battleships.good_attack_checker(self,defender)
+        battle_info = self.battle_info
         shot_lock = True
         random_choice = random.randint(0,1)
-        
+
         for i in range(len(battle_info[-1])):
-            if len(battle_info[-1][i]) > 0 and len(battle_info[-1][i]) < battle_info[2][i]:
-                self.focus = i
-                self.battle_focus = True
-                break
-                
-            if self.battle_focus:
-                if len(battle_info[-1][self.focus]) == battle_info[2][self.focus]:
-                    self.battle_focus = False
+                if len(battle_info[-1][i]) > 0 and len(battle_info[-1][i]) < battle_info[2][i]:
+                    self.focus = i
+                    self.battle_focus = True
+                    break
+                    
+                if self.battle_focus:
+                    if len(battle_info[-1][self.focus]) == battle_info[2][self.focus]:
+                        self.battle_focus = False
                         
         if self.battle_focus:
             for i in range(len(battle_info[-1][self.focus])):
-                z = json.loads(json.dumps(battle_info[-1][self.focus][i]))
-                if random_choice == 0:
-                    start_index = 0
-                    end_index = 2
-                    increase = 1
+                if len(battle_info[-1][self.focus]) < 2:
+                    z = json.loads(json.dumps(battle_info[-1][self.focus][i]))
+                    if random_choice == 0:
+                        start_index = 0
+                        end_index = 2
+                        increase = 1
+                    else:
+                        start_index = 1
+                        end_index = -1
+                        increase = -1
+                    
+                    for xy in range(start_index,end_index,increase):
+                            start_value = -1
+                            end_value = 3
+                            if z[xy] == 0:
+                                start_value = 1
+                            elif z[xy] == 9:
+                                end_value = 1
+                                
+                            for amount_pos in range(start_value, end_value,3):
+                                z[xy] += amount_pos
+                                if z not in self.attacked_positions and shot_lock:
+                                    grid_x, grid_y = z
+                                    shot_lock = False
+                            z = json.loads(json.dumps(battle_info[-1][self.focus][i]))
                 else:
-                    start_index = 1
-                    end_index = -1
-                    increase = -1
-                
-                for xy in range(start_index,end_index,increase):
+                    if len(battle_info[-1][self.focus]) > 0:
+                        direction_start = json.loads(json.dumps(battle_info[-1][self.focus][0]))
+                        direction_end = json.loads(json.dumps(battle_info[-1][self.focus][i]))
+                        z = direction_end
+                        if direction_start == direction_end:
+                            direction_end = json.loads(json.dumps(battle_info[-1][self.focus][i+1]))
+                            if direction_start[0] == direction_end[0]:
+                                xy = 1
+
+                            elif direction_start[1] == direction_end[1]:
+                                xy = 0
+                        elif direction_start[0] == direction_end[0]:
+                            xy = 1
+
+                        elif direction_start[1] == direction_end[1]:
+                            xy = 0
+
                         start_value = -1
                         end_value = 3
                         if z[xy] == 0:
                             start_value = 1
                         elif z[xy] == 9:
                             end_value = 1
-                            
+                                    
                         for amount_pos in range(start_value, end_value,3):
                             z[xy] += amount_pos
                             if z not in self.attacked_positions and shot_lock:
                                 grid_x, grid_y = z
                                 shot_lock = False
-                        z = json.loads(json.dumps(battle_info[-1][self.focus][i]))
+                        z = direction_end
+
             
         else:
-            grid_x, grid_y = random.randint(0,9), random.randint(0,9)
+
+            grid_x, grid_y = self.best_attack_location(defender)
                     
 
         if 0 <= grid_x < self.grid_size and 0 <= grid_y < self.grid_size:
@@ -78,10 +155,13 @@ class Bot(Player):
                             enemy_board[grid_y][grid_x] = 3
                             attack_value = 3
         
-                        
+
                     if enemy_board[grid_y][grid_x] == 1:
                             enemy_board[grid_y][grid_x] = 2
                             attack_value = 2
+        if attack_value == 2 or attack_value == 3:
+            local_battleships.render()
+            time.sleep(1)
                         
         return attack_value
                             
@@ -91,6 +171,8 @@ class LocalBattleships(BattleShips):
     def __init__(self, spill):
         super().__init__(spill,False)
         self.player = Player(spill,0)
+        self.player.destroyed_ships = 0
+        self.player.good_attacks = []
         self.player2 = Bot(spill)
         self.player2.place_ships(self.player2.board, self.ship_sizes)
         self.player2.ship_sizes = self.ship_sizes
@@ -99,6 +181,7 @@ class LocalBattleships(BattleShips):
         self.loaded_ships = False
         self.battleship_attack = False
         self.destroyed_ships = 0
+
 
 
     def good_attack_checker(self, attacker: Player, defender: Player):
@@ -160,26 +243,24 @@ class LocalBattleships(BattleShips):
 
         if self.player.my_turn:
             self.text_turn = "Attack the other player board"
-            x, y = self.spill.pressed_actions["mouse"][1]
-            grid_x, grid_y = (x - self.grid_offset_x) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
-            if self.spill.pressed_actions["mouse"][0] and self.loaded_ships and grid_x >= 11 and grid_x <= 20 and grid_y >= 0 and grid_y <= 9:
+            if self.spill.pressed_actions["mouse"][0] and self.loaded_ships:
                 self.player.attack(self.player2.board)
-                self.good_attack_checker(self.player, self.player2)
+                self.player.destroyed_ships = self.good_attack_checker(self.player, self.player2)[0]
                 self.spill.pressed_actions["mouse"][0] = False  # Nullstill klikk
                 if len(self.player.good_attacks) > 0:
                     if self.player.good_attacks[-1] == self.player.attacked_positions[-1]:
                         self.player.my_turn = True
                     elif self.player.good_attacks != self.player.attacked_positions[-1]:
                         self.player.my_turn = False
-                    
-            else:
-                self.spill.pressed_actions["mouse"][1] = (0, 0)
-                self.text_turn = "Hope the oponent doesn't hit you"
+                        self.render()
             
 
         if not self.player.my_turn and self.loaded_ships:
-            while self.player2.attack(self, self.player.board, self.player) != 3:pass
+            self.spill.pressed_actions["mouse"][0] = False  # Nullstill klikk
+            self.text_turn = "Hope the oponent doesn't hit you"
+            while self.player2.attack(self, self.player.board, self.player) != 3: pass
             self.destroyed_ships = self.player2.battle_info[0]
+            print(self.player2.battle_info[0])
             self.player.my_turn = True
         
         
@@ -264,4 +345,20 @@ class LocalBattleships(BattleShips):
                 overlay = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
                 overlay.fill((150, 150, 150, 128))  # gjennomsiktig grå farge
                 self.spill.screen.blit(overlay, (cell_x, cell_y))
+        # Tegner informasjonstekst
+        if not self.attack_phase:
+            text = "Place your ships! Press 'R' to rotate. sizes of the ships you place are: [2, 3, 3, 4, 5] in that order "
+            self.draw_text(text, 30, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
+        else:
+            text = "Time to battle!!"
+            self.draw_text(text, 70, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
+        
+        # Info text
+        if not self.attack_phase:
+            self.draw_text(self.spill.pressed_actions["rotate"] if len(self.player.ships) < 5 else "You have placed all your ships", 40, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - 120)
+        else:
+            self.draw_text(self.text_turn, 40, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - 120)    
+        
+        self.draw_text(f"ships sunk: {self.player.destroyed_ships}", 50, (0, 0, 0), self.spill.screen.get_width() // 2, 30)
+        pygame.display.flip()
         

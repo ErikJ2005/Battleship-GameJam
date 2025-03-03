@@ -9,7 +9,6 @@ class Player(State):
         self.player_id = player_id
         self.ships = []  # List of ships with position, size, and health
         self.attacked_positions = []
-        self.good_attacks = []
         self.ships_placed = False  # Track if the player has placed all ships
         self.grid_size = 10
         self.cell_size = 40
