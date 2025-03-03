@@ -1,5 +1,6 @@
 from state import State
 import pygame
+from mainmenu import Button
 
 class EndScreen(State):
     def __init__(self, spill):
@@ -10,14 +11,20 @@ class EndScreen(State):
         self.bg = pygame.image.load("images/battleship_bg.jpg")
         self.bg = pygame.transform.scale(self.bg, (self.spill.screen.get_width(), self.spill.screen.get_height()))
         self.font = pygame.font.Font(None, 100)
+        
+        self.back_to_main_menu = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 + 200, 300, 50, "Main-menu")
 
     def update(self):
-        if self.spill.pressed_actions["enter"]:
+        self.back_to_main_menu.color = (200, 200, 200) if self.back_to_main_menu.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
+        
+        # Host game button click
+        if self.back_to_main_menu.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+            self.spill.pressed_actions["mouse"][1] = (0,0)
             self.spill.change_state("mainmenu")
-            self.spill.pressed_actions["enter"] = False
 
     def render(self):
         self.bg = pygame.transform.scale(self.bg, (self.spill.screen.get_width(), self.spill.screen.get_height()))
         self.spill.screen.blit(self.bg, (0, 0))
+        self.back_to_main_menu.render(self.spill.screen)
         winner = self.font.render(self.spill.winner, True, (0, 0, 0))
         self.spill.screen.blit(winner, (self.spill.screen.get_width() // 2 - winner.get_width() // 2, self.spill.screen.get_height() // 2 - winner.get_height() // 2))
