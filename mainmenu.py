@@ -117,12 +117,13 @@ class MainMenu(State):
         self.draw_text("Online servers", 40, (0, 0, 0), self.spill.screen.get_width() - 200, 100)
         # Display discovered IPs
         for i, ip in enumerate(self.discovered_servers):
-            color = (200, 200, 200, 100) if ip == self.selected_ip else (255, 255, 255, 100)
+            rect = pygame.Rect(self.spill.screen.get_width() - 350, 115 + i * 40, 300, 30)
+            
+            color = (138, 0, 0, 100) if ip == self.selected_ip else (200, 200, 200, 100)  if rect.collidepoint(pygame.mouse.get_pos()) else (255, 255, 255, 100)
             # Create a transparent surface
             rect_surface = pygame.Surface((300, 30), pygame.SRCALPHA)
             rect_surface.fill(color)  # Fill with RGBA color
             # Blit the transparent surface onto the main screen
             self.spill.screen.blit(rect_surface, (self.spill.screen.get_width() - 350, 115 + i * 40))
-            
             pygame.draw.rect(self.spill.screen, color, (self.spill.screen.get_width() - 350, 115 + i * 40, 300, 30), 2)
             self.draw_text(ip, 30, (0, 0, 0), self.spill.screen.get_width()-200, 130 + i * 40)

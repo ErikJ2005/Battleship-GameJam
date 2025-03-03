@@ -301,7 +301,7 @@ class LocalBattleships(BattleShips):
 
             # Roter bildet hvis nødvendig
             if orientation == "vertical":
-                ship_image = pygame.transform.rotate(ship_image, 90)
+                ship_image = pygame.transform.rotate(ship_image, -90)
                 
             # Beregn posisjon på skjermen
             cell_x = self.grid_offset_x + (first_x * self.cell_size) + ((self.cell_size-ship_height)//2 if orientation == "vertical" else 0)

@@ -174,12 +174,13 @@ class BattleShips(State):
                 if self.spill.pressed_actions["mouse"][0] and len(self.player.ships) < 5:
                     x, y = self.spill.pressed_actions["mouse"][1]
                     grid_x, grid_y = (x - self.grid_offset_x) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
-                    self.spill.pressed_actions["mouse"][0] = False
                     
                     if self.player.place_ship(self.player.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
                         self.ship_index += 1
                     else:
-                        print("Kan ikke plassere skipet her!") 
+                        print("Kan ikke plassere skipet her!")
+                        
+                    self.spill.pressed_actions["mouse"][0] = False
             else:
                 self.spill.pressed_actions["mouse"][1] = (0,0)
             
@@ -267,7 +268,7 @@ class BattleShips(State):
             ship_image = pygame.transform.scale(self.ship_image, (ship_width, ship_height))
 
             if orientation == "vertical":
-                ship_image = pygame.transform.rotate(ship_image, 90)
+                ship_image = pygame.transform.rotate(ship_image, -90)
                 
             cell_x = self.grid_offset_x + (first_x * self.cell_size) + ((self.cell_size - ship_height) // 2 if orientation == "vertical" else 0)
             cell_y = self.grid_offset_y + (first_y * self.cell_size) + ((self.cell_size - ship_height) // 2 if orientation == "horizontal" else 0)
