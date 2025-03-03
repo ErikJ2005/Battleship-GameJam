@@ -90,7 +90,7 @@ class MainMenu(State):
 
         # Check if any IP is clicked
         for i, ip in enumerate(self.discovered_servers):
-            ip_rect = pygame.Rect(self.spill.screen.get_width() - 350, 100 + i * 40, 300, 30)
+            ip_rect = pygame.Rect(self.spill.screen.get_width() - 350, 115 + i * 40, 300, 30)
             if ip_rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
                 self.selected_ip = ip
 

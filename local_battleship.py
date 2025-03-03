@@ -260,7 +260,6 @@ class LocalBattleships(BattleShips):
             self.text_turn = "Hope the oponent doesn't hit you"
             while self.player2.attack(self, self.player.board, self.player) != 3: pass
             self.destroyed_ships = self.player2.battle_info[0]
-            print(self.player2.battle_info[0])
             self.player.my_turn = True
         
         
