@@ -45,6 +45,8 @@ class Main:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.pressed_actions["mouse"][1] = pygame.mouse.get_pos()
                 self.pressed_actions["mouse"][0] = True
+            else:
+                self.pressed_actions["mouse"][0] = False
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
