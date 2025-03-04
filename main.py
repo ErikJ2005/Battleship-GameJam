@@ -2,7 +2,7 @@
 
 import pygame
 from mainmenu import MainMenu
-from Battleship import BattleShips
+from battleship import BattleShips
 from game_end_screen import EndScreen
 from local_battleship import LocalBattleships
 
