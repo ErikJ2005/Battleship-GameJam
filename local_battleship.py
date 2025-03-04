@@ -1,7 +1,7 @@
 # https://github.com/Ex1118/Battleship-GameJam.git
 
 
-from battleship import Player, BattleShips
+from Battleship import Player, BattleShips
 import random
 import pygame
 import json
@@ -64,11 +64,52 @@ class Bot(Player):
             else:
                 best_attack = [random.randint(0,9), random.randint(0,9)]
         return best_attack
+
+    def attack_algorithm(self, z: list, xy_cords: bool, xy_value: int):
+        battle_info = z
+        shot_lock = True
+        if random.randint(0,1) == 0:
+            start_index = 0
+            end_index = 2
+            increase = 1
+        else:
+            start_index = 1
+            end_index = -1
+            increase = -1
+        
+        for xy in range(start_index,end_index,increase):
+            if not xy_cords:
+                xy_change = xy
+                print("xy_change: ", xy_change, "xy_value: ", xy_value)
+            else:
+                xy_change = xy_value
+                print("xy_change: ", xy_change, "xy_value: ", xy_value)
+
+            start_value = -1
+            end_value = 3
+            if z[xy_change] == 0:
+                start_value = 1
+            elif z[xy_change] == 9:
+                end_value = 1
                     
+            for amount_pos in range(start_value, end_value,3):
+                    z[xy_change] += amount_pos
+                    print("change of z: ", z)
+                    if z not in self.attacked_positions and shot_lock:
+                        print("z: ", z)
+                        grid_x, grid_y = z
+                        shot_lock = False
+            z = battle_info
+        if shot_lock == False:
+            return [grid_x, grid_y], shot_lock
+        else:
+            return z, shot_lock
+        
+
     def attack(self, local_battleships, enemy_board: list, defender: Player):
         attack_value = -1
         self.battle_info = local_battleships.good_attack_checker(self,defender)
-        battle_info = self.battle_info
+        battle_info = json.loads(json.dumps(self.battle_info))
         shot_lock = True
         random_choice = random.randint(0,1)
 
@@ -84,66 +125,26 @@ class Bot(Player):
                         
         if self.battle_focus:
             for i in range(len(battle_info[-1][self.focus])):
-                if len(battle_info[-1][self.focus]) < 2:
-                    z = json.loads(json.dumps(battle_info[-1][self.focus][i]))
-                    if random_choice == 0:
-                        start_index = 0
-                        end_index = 2
-                        increase = 1
-                    else:
-                        start_index = 1
-                        end_index = -1
-                        increase = -1
-                    
-                    for xy in range(start_index,end_index,increase):
-                            start_value = -1
-                            end_value = 3
-                            if z[xy] == 0:
-                                start_value = 1
-                            elif z[xy] == 9:
-                                end_value = 1
-                                
-                            for amount_pos in range(start_value, end_value,3):
-                                z[xy] += amount_pos
-                                if z not in self.attacked_positions and shot_lock:
-                                    grid_x, grid_y = z
-                                    shot_lock = False
-                            z = json.loads(json.dumps(battle_info[-1][self.focus][i]))
+                z = battle_info[-1][self.focus][i]
+                if len(battle_info[-1][self.focus]) < 2 or len(battle_info[-1][self.focus]) == battle_info[2][self.focus]-1:
+                    z, shot_lock = self.attack_algorithm(z, False, 0)
+                    if not shot_lock:
+                        grid_x, grid_y  = z
                 else:
-                    if len(battle_info[-1][self.focus]) > 0:
-                        direction_start = json.loads(json.dumps(battle_info[-1][self.focus][0]))
-                        direction_end = json.loads(json.dumps(battle_info[-1][self.focus][i]))
-                        z = direction_end
+                        direction_start = battle_info[-1][self.focus][0]
+                        direction_end = battle_info[-1][self.focus][i]
                         if direction_start == direction_end:
-                            direction_end = json.loads(json.dumps(battle_info[-1][self.focus][i+1]))
-                            if direction_start[0] == direction_end[0]:
-                                xy = 1
-
-                            elif direction_start[1] == direction_end[1]:
-                                xy = 0
-                        elif direction_start[0] == direction_end[0]:
+                            direction_end = battle_info[-1][self.focus][i+1]
+                        if direction_start[0] == direction_end[0]:
                             xy = 1
 
                         elif direction_start[1] == direction_end[1]:
                             xy = 0
 
-                        start_value = -1
-                        end_value = 3
-                        if z[xy] == 0:
-                            start_value = 1
-                        elif z[xy] == 9:
-                            end_value = 1
-                                    
-                        for amount_pos in range(start_value, end_value,3):
-                            z[xy] += amount_pos
-                            if z not in self.attacked_positions and shot_lock:
-                                grid_x, grid_y = z
-                                shot_lock = False
-                        z = direction_end
-
-            
+                        z, shot_lock = self.attack_algorithm(z, True, xy)
+                        if not shot_lock:
+                            grid_x, grid_y = z
         else:
-
             grid_x, grid_y = self.best_attack_location(defender)
                     
 
@@ -155,7 +156,6 @@ class Bot(Player):
                             enemy_board[grid_y][grid_x] = 3
                             attack_value = 3
         
-
                     if enemy_board[grid_y][grid_x] == 1:
                             enemy_board[grid_y][grid_x] = 2
                             attack_value = 2
@@ -208,10 +208,6 @@ class LocalBattleships(BattleShips):
                 ship_sunk_index.append(battleship)
                 ship_sunk += 1
         return [ship_sunk, json.loads(json.dumps(defender.player_id)), ship_size_pos, ship_sunk_index, ship_attack_pos]
-                    
-                    
-                
-            
 
     def update(self):
         if self.spill.pressed_actions["key"][0] and self.spill.pressed_actions["key"][1] == "r":
@@ -243,7 +239,9 @@ class LocalBattleships(BattleShips):
 
         if self.player.my_turn:
             self.text_turn = "Attack the other player board"
-            if self.spill.pressed_actions["mouse"][0] and self.loaded_ships:
+            x, y = self.spill.pressed_actions["mouse"][1]
+            grid_x, grid_y = (x - self.grid_offset_x) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
+            if self.spill.pressed_actions["mouse"][0] and self.loaded_ships and 11 <= grid_x < 21 and 0 <= grid_y < self.grid_size:
                 self.player.attack(self.player2.board)
                 self.player.destroyed_ships = self.good_attack_checker(self.player, self.player2)[0]
                 self.spill.pressed_actions["mouse"][0] = False  # Nullstill klikk
@@ -253,14 +251,18 @@ class LocalBattleships(BattleShips):
                     elif self.player.good_attacks != self.player.attacked_positions[-1]:
                         self.player.my_turn = False
                         self.render()
+            else:
+                self.spill.pressed_actions["mouse"][1] = (0,0)  # Nullstill klikk
+                self.spill.pressed_actions["mouse"][0] = False
+
             
 
         if not self.player.my_turn and self.loaded_ships:
-            self.spill.pressed_actions["mouse"][0] = False  # Nullstill klikk
+            self.spill.pressed_actions["mouse"][1] = (0,0)  # Nullstill klikk
+            self.spill.pressed_actions["mouse"][0] = False
             self.text_turn = "Hope the oponent doesn't hit you"
             while self.player2.attack(self, self.player.board, self.player) != 3: pass
             self.destroyed_ships = self.player2.battle_info[0]
-            print(self.player2.battle_info[0])
             self.player.my_turn = True
         
         
