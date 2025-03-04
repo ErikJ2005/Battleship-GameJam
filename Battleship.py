@@ -181,17 +181,12 @@ class BattleShips(State):
                         print("Kan ikke plassere skipet her!")
                         
                     self.spill.pressed_actions["mouse"][0] = False
-            else:
-                self.spill.pressed_actions["mouse"][1] = (0,0)
             
             if self.player.my_turn:
                 self.text_turn = "Attack the other player board"
                 if self.spill.pressed_actions["mouse"][0] and self.loaded_ships:
                     self.player.attack(self.player2.board)
                     self.spill.pressed_actions["mouse"][0] = False
-            else:
-                self.spill.pressed_actions["mouse"][1] = (0, 0)
-                self.text_turn = "Hope the oponent doesn't hit you"
                 
             if data_parts[3] == "True" and not self.loaded_ships and len(self.player.ships) == 5:
                 self.loaded_ships = True
