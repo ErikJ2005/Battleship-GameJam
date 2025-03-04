@@ -1,7 +1,7 @@
 # https://github.com/Ex1118/Battleship-GameJam.git
 
 
-from Battleship import Player, BattleShips
+from battleship import Player, BattleShips
 import random
 import pygame
 import json
