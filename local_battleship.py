@@ -9,7 +9,26 @@ import time
 
 
 class Bot(Player):
+    """
+    En Bot med navn: Grik-Alpha-Sigma-13-21
+    Opprinnelse: Fra romstasjonen Omnikron-3-Beta
+    
+    Hovedmål: Bip Bop
+    
+    Sidemål: Dorf
+    
+    Hobby: Ser på profesjonell Gleep-Glorp-Zoop og heier på Worf
+    
+    Jobb: Rommer kanonene på romstasjonen Omnikron-3-Beta
+
+    """
     def __init__(self, spill):
+        """
+        Her er variabler.
+
+        Args:
+            spill (main): Den karakteren du spiller mest av alle i et spill.
+        """
         super().__init__(spill,1)
         self.destroyed_ships = 0
         self.good_attacks = []
@@ -18,15 +37,25 @@ class Bot(Player):
         self.ship_sizes = []
         self.battle_focus = False
 
+
     def place_ships(self,board: list, ship_sizes: list):
+        """
+        Plaserer skip.
+
+        Args:
+            board (list): Brettet som den plasserer skipene på
+            ship_sizes (list): Størrelsen på skipene som blir plassert
+        """
         i = 0
-        while len(self.ships) < 5:
+        while len(self.ships) < len(ship_sizes):
             if self.place_ship(board, random.randint(0, 9), random.randint(0, 9), random.choice(["horizontal", "vertical"]), ship_sizes[i]):
                 i += 1
+    
     
     def best_attack_location(self, defender: Player):
         """
         Dette er angrepsalgoritmen dersom den ikke vet om noen skip som ikke er ødelagt.
+        Jeg vet ikke om det er en bra ting :(
 
         Args:
             defender (Player): Den som beskytter seg mot angrep.
@@ -70,9 +99,12 @@ class Bot(Player):
                 best_attack = [random.randint(0,9), random.randint(0,9)]
         return best_attack
 
+
     def attack_algorithm(self, z: list, xy_cords: bool, xy_value: int):
         """
         Dette er angrepsalgoritmen som går dersom det er fokus på et skip.
+        
+        Brukes denne i praksis kommer allierte skip til å synke før fiendens...
 
         Args:
             z (list): Kordinatene som skal bli skjekket.
@@ -82,6 +114,7 @@ class Bot(Player):
         Returns:
             list: Angrepskordinatene dersom den finner det med en True/False value der true betyr at kordinatene ikke er angrepskordinater ellers er det angrepskordinater.
         """
+        
         battle_info = json.loads(json.dumps(z))
         shot_lock = True
         if random.randint(0,1) == 0:
@@ -123,13 +156,14 @@ class Bot(Player):
     def attack(self, local_battleships, defender: Player):
         """
         Angrepsmetoden til Bot
+        Warning: IKKE MENT TIL Å BRUKES PÅ ORDENTLIG!!
 
         Args:
             local_battleships (LocalBattleships): importerer local_battleships for å kunne bruke dens good_attack_checker() metode.
             defender (Player): Klassen til spilleren med hensikt i å bruke boardet til spilleren og good_attack_checker().
 
         Returns:
-            _type_: _description_
+            int: Denne verdien beskriver om den traff vann, et skip eller om den ikke traff noe.
         """
         attack_value = -1
         self.battle_info = local_battleships.good_attack_checker(self, defender)
@@ -198,6 +232,12 @@ class Bot(Player):
 
 class LocalBattleships(BattleShips):
     def __init__(self, spill):
+        """
+        Flere variabler.
+
+        Args:
+            spill (main): Den karakteren i alle filmer og spill som de fleste liker best alltid.
+        """
         super().__init__(spill,False)
         self.player = Player(spill,0)
         self.player.destroyed_ships = 0
@@ -213,6 +253,22 @@ class LocalBattleships(BattleShips):
 
 
     def good_attack_checker(self, attacker: Player, defender: Player):
+        """
+        Sjekker om data om angreperen har et bra angrep og legger det i en liste.
+        
+        Denne metoden returnerer også en liste med data som hvor mange skip angriperen har sunket, 
+        hvilket player som ble truffet, hvilket størrelse de forskjellige kipene har, indeksen til de 
+        forskjellige kipstypene og punktene som du har truffet på de skipene sortert i hvilket skip du traff.
+        
+
+        Args:
+            attacker (Player): Angriperen
+            defender (Player): Beskyttern
+
+        Returns:
+            list: En liste med mye data. Da blir Sam Altman glad :).
+        """
+        
         ship_sunk = 0
         ship_attack_pos = []
         ship_size_pos = []
@@ -235,6 +291,13 @@ class LocalBattleships(BattleShips):
 
 
     def update(self):
+        """
+        Update loopen med alt som skjer inni.
+        
+        Tips: Skru av hjemmekameraet ditt ellers vil Jeff Bazos se in i sjelen din...
+        
+        
+        """
         if self.spill.pressed_actions["key"][0] and self.spill.pressed_actions["key"][1] == "r":
             if self.orientation == "horizontal":
                 self.orientation = "vertical"
@@ -300,6 +363,11 @@ class LocalBattleships(BattleShips):
                 
 
     def render(self):
+        """
+        Render metoden for all rendering i Singleplayer.
+        Enda et tips: Det er ingen grunn for det. Han har alt om deg fra før :)
+        
+        """
         self.spill.screen.blit(self.bg, (0, 0))
         
         # Get mouse position
