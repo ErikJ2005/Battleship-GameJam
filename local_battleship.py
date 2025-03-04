@@ -80,10 +80,8 @@ class Bot(Player):
         for xy in range(start_index,end_index,increase):
             if not xy_cords:
                 xy_change = xy
-                print("xy_change: ", xy_change, "xy_value: ", xy_value)
             else:
                 xy_change = xy_value
-                print("xy_change: ", xy_change, "xy_value: ", xy_value)
 
             start_value = -1
             end_value = 3
@@ -93,12 +91,10 @@ class Bot(Player):
                 end_value = 1
                     
             for amount_pos in range(start_value, end_value,3):
-                    z[xy_change] += amount_pos
-                    print("change of z: ", z)
-                    if z not in self.attacked_positions and shot_lock:
-                        print("z: ", z)
-                        grid_x, grid_y = z
-                        shot_lock = False
+                z[xy_change] += amount_pos
+                if z not in self.attacked_positions and shot_lock:
+                    grid_x, grid_y = z
+                    shot_lock = False
             z = battle_info
         if shot_lock == False:
             return [grid_x, grid_y], shot_lock
@@ -108,10 +104,9 @@ class Bot(Player):
 
     def attack(self, local_battleships, enemy_board: list, defender: Player):
         attack_value = -1
-        self.battle_info = local_battleships.good_attack_checker(self,defender)
+        self.battle_info = local_battleships.good_attack_checker(self, defender)
         battle_info = json.loads(json.dumps(self.battle_info))
         shot_lock = True
-        random_choice = random.randint(0,1)
 
         for i in range(len(battle_info[-1])):
                 if len(battle_info[-1][i]) > 0 and len(battle_info[-1][i]) < battle_info[2][i]:
@@ -126,7 +121,7 @@ class Bot(Player):
         if self.battle_focus:
             for i in range(len(battle_info[-1][self.focus])):
                 z = battle_info[-1][self.focus][i]
-                if len(battle_info[-1][self.focus]) < 2 or len(battle_info[-1][self.focus]) == battle_info[2][self.focus]-1:
+                if len(battle_info[-1][self.focus]) < 2:
                     z, shot_lock = self.attack_algorithm(z, False, 0)
                     if not shot_lock:
                         grid_x, grid_y  = z
@@ -153,12 +148,13 @@ class Bot(Player):
                     self.attacked_positions.append([grid_x, grid_y])
                     
                     if enemy_board[grid_y][grid_x] == 0:
-                            enemy_board[grid_y][grid_x] = 3
-                            attack_value = 3
+                        enemy_board[grid_y][grid_x] = 3
+                        attack_value = 3
         
                     if enemy_board[grid_y][grid_x] == 1:
-                            enemy_board[grid_y][grid_x] = 2
-                            attack_value = 2
+                        enemy_board[grid_y][grid_x] = 2
+                        attack_value = 2
+                            
         if attack_value == 2 or attack_value == 3:
             local_battleships.render()
             time.sleep(1)
@@ -191,19 +187,16 @@ class LocalBattleships(BattleShips):
         ship_sunk_index = []
         local_defender = json.loads(json.dumps(defender.ships))
         for battleship in range(len(local_defender)):
-            for attack in attacker.attacked_positions:
-                if attack in local_defender[battleship][0]:
-                    if attack not in attacker.good_attacks:
-                        attacker.good_attacks.append(attack)
-                        
-        for battleship in range(len(local_defender)):
             ship_size_pos.append(len(local_defender[battleship][0]))
             ship_attack_pos.append([])
-            for attack in attacker.good_attacks:
+            for attack in attacker.attacked_positions:
                 if attack in local_defender[battleship][0]:
                     ship_attack_pos[battleship].append(attack)
                     local_defender[battleship][0].remove(attack)
-                
+                    if attack not in attacker.good_attacks:
+                        attacker.good_attacks.append(attack)
+                        
+                    
             if len(local_defender[battleship][0]) == 0:
                 ship_sunk_index.append(battleship)
                 ship_sunk += 1
@@ -363,4 +356,3 @@ class LocalBattleships(BattleShips):
         
         self.draw_text(f"ships sunk: {self.player.destroyed_ships}", 50, (0, 0, 0), self.spill.screen.get_width() // 2, 30)
         pygame.display.flip()
-        
