@@ -1,5 +1,16 @@
 # https://github.com/Ex1118/Battleship-GameJam.git
 
+# Dette skal gjøre det mulig å kjøre spillet som en .exe fil:
+
+# Step 1: Installer pyinstaller
+# pip install pyinstaller
+
+# Step 2: Naviger til mappen hvor main.py ligger
+# cd "C:\Path\To\Your\Project"
+
+# Step 3: Kjør kommandoen under for å lage en .exe fil
+# pyinstaller --onefile main.py
+
 
 from battleship import Player, BattleShips
 import random
