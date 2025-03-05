@@ -21,6 +21,18 @@ class Player(State):
         self.grid_offset_y = 50
 
     def place_ship(self, board : list, x : int, y : int, orientation : str, ship_size : int) -> bool:
+        """ Plasserer et skip på brettet man vil i retningen man vil og av størrelsen man vil
+
+        Args:
+            board (list): spill brettet skipet skal plaseres på
+            x (int): x posisjonen til første ruten til skipet
+            y (int): y posisjonen til første ruten til skipet
+            orientation (str): hvilke retning skipet skal peke
+            ship_size (int): størelsen på skipet
+
+        Returns:
+            bool: returnerer True hvis hvis skpet kunne bli lagt til på den posisjonen og False hvis skipet ikke kunne bli lagt til
+        """
         if not self.ships_placed:
             if 0 <= x < 10 and 0 <= y < 10:
                 new_positions = []
@@ -50,6 +62,12 @@ class Player(State):
         return False
     
     def attack(self, enemy_board : list):
+        """ henter x og y kordinatet til musen og angriper ruten man valgte på brettet man har lagt inn
+
+        Args:
+            enemy_board (list): brettet man vil angripe
+        """
+
         x, y = self.spill.pressed_actions["mouse"][1]
         grid_x, grid_y = (x - self.grid_offset_x - (self.grid_size * self.cell_size + 40)) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
 
@@ -65,6 +83,10 @@ class Player(State):
                 self.my_turn = False
     
     def all_ships_sunk(self) -> bool:
+        """ Sjekker om alle skip har sunket
+        Returns:
+            bool: returnerer True hvis alle skip har sunket og ellers False
+        """
         # sjekker om alle skip har sunket
         for row in self.board:
             if 1 in row:
@@ -141,7 +163,11 @@ class BattleShips(State):
         self.spill.screen.blit(info, (x - info.get_width() // 2,y - info.get_height() // 2))
         
     def ships_sunk(self, received_ships : list):
-        # sjekk hvor mange skip har sunket
+        """ Sjekker hvor mange skip som har sunket ved å sjekke om alle kordinatene til et skip har blitt fjernet fra en del av listen
+
+        Args:
+            received_ships (list): skipene på motstander brettet 
+        """
         for index , ships in enumerate(received_ships):
             for attacks in self.player.attacked_positions:
                 if attacks in ships[0]:
@@ -222,7 +248,15 @@ class BattleShips(State):
             print(f"Error handling data: {data_parts}")
 
     def get_hovered_cells(self, mouse_x : int, mouse_y  : int) -> list:
-        """Calculate the cells that the ship will occupy based on the mouse position."""
+        """ finner ut hvilke ruter som skal markers
+
+        Args:
+            mouse_x (int): x posisjon til musen
+            mouse_y (int): y posisjonen til musen
+
+        Returns:
+            list: kordinatene hvor rutene skal markeres
+        """
         if not self.game_ready or self.attack_phase or self.ship_index >= len(self.ship_sizes):
             return []
 
