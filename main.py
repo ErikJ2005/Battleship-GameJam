@@ -15,7 +15,7 @@ class Main:
         pygame.mixer.music.load("music/theme_song.wav")
         pygame.mixer.music.play(-1)  # loop
         pygame.mixer.music.set_volume(0.3)  # float tall
-        
+
         # Volum nivåer
         self.miss_volume = 1
         self.hit_volume = 1

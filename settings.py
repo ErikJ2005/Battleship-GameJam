@@ -47,6 +47,7 @@ class Settings(State):
         
         self.back_to_main_menu = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 + 200, 300, 50, "Main-menu", "images/buttons.png")
         
+        # Lager de forskjellige sliderne
         self.music_slider = Slider(spill, self.spill.screen.get_width()//2, 100, 200, 30, 0, 1, self.spill.music_volume)
         self.button_slider = Slider(spill, self.spill.screen.get_width()//2, 200, 200, 30, 0, 1, self.spill.button_volume)
         self.miss_slider = Slider(spill, self.spill.screen.get_width()//2, 300, 200, 30, 0, 1, self.spill.miss_volume)
