@@ -19,6 +19,11 @@ class Player(State):
         
         self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - 40) // 2
         self.grid_offset_y = 50
+        
+        self.splash = pygame.mixer.Sound("music/splash.wav")
+        self.explosion = pygame.mixer.Sound("music/explosion.wav")
+        self.splash.set_volume(self.spill.miss_volume)
+        self.explosion.set_volume(self.spill.hit_volume)
 
     def place_ship(self, board : list, x : int, y : int, orientation : str, ship_size : int) -> bool:
         """ Plasserer et skip på brettet man vil i retningen man vil og av størrelsen man vil
@@ -33,6 +38,7 @@ class Player(State):
         Returns:
             bool: returnerer True hvis hvis skpet kunne bli lagt til på den posisjonen og False hvis skipet ikke kunne bli lagt til
         """
+        
         if not self.ships_placed:
             if 0 <= x < 10 and 0 <= y < 10:
                 new_positions = []
@@ -77,8 +83,10 @@ class Player(State):
                 self.attacked_positions.append([grid_x, grid_y])
                 
                 if enemy_board[grid_y][grid_x] == 1:  # Treffer et skip
+                    self.explosion.play()
                     enemy_board[grid_y][grid_x] = 2  # Marker som truffet
                 else:
+                    self.splash.play()
                     enemy_board[grid_y][grid_x] = 3  # Marker som bom 
                 self.my_turn = False
     
@@ -100,6 +108,11 @@ class BattleShips(State):
         self.ship_image = pygame.image.load("images/ship.png")
         self.hit_image = pygame.image.load("images/hit.png")
         self.miss_image = pygame.image.load("images/miss.png")
+        
+        self.splash = pygame.mixer.Sound("music/splash.wav")
+        self.explosion = pygame.mixer.Sound("music/explosion.wav")
+        self.splash.set_volume(self.spill.miss_volume)
+        self.explosion.set_volume(self.spill.hit_volume)
         
         self.bg = pygame.transform.scale(self.bg, (self.spill.screen.get_width(), self.spill.screen.get_height()))
         self.font = pygame.font.Font(None, 24)
@@ -202,6 +215,7 @@ class BattleShips(State):
                     grid_x, grid_y = (x - self.grid_offset_x) // self.cell_size, (y - self.grid_offset_y) // self.cell_size
                     
                     if self.player.place_ship(self.player.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
+                        self.splash.play()
                         self.ship_index += 1
                     else:
                         print("Kan ikke plassere skipet her!")
@@ -227,8 +241,10 @@ class BattleShips(State):
             for attacks in received_attacks:
                 y, x = attacks
                 if self.player.board[x][y] == 0:
+                    self.splash.play()
                     self.player.board[x][y] = 3
                 elif self.player.board[x][y] == 1:
+                    self.explosion.play()
                     self.player.board[x][y] = 2
                     
             self.ships_sunk(self.received_ships)

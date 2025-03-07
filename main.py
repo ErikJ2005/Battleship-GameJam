@@ -8,14 +8,34 @@ from local_battleship import LocalBattleships
 
 class Main:
     def __init__(self):
+        
+        # Spiller musiken til spillet
+        pygame.mixer.init()
+        pygame.mixer.music.load("music/theme_song.wav")
+        pygame.mixer.music.play(-1)  # loop
+        pygame.mixer.music.set_volume(0.3)  # float tall
+        
+        # Volum nivåer
+        self.ship_placing_volume = 2
+        self.miss_volume = 1
+        self.hit_volume = 3
+        self.music_volume = 0.3
+        self.button_volume = 2
+        
         pygame.init()
+
         self.screen = pygame.display.set_mode((1200, 600))
+        self.running = True
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
+        
         self.pressed_actions = {"mouse": [False, (0, 0)], "enter" : False, "key" : [False,""], "backspace" : False, "rotate" : "horizontal"}
+        
         self.ip = ""
         self.winner = ""
+        
         self.font = pygame.font.Font(None, 32)
+        
         self.states = {
             "mainmenu": MainMenu(self),
             "battleship": BattleShips(self, True),
@@ -23,8 +43,7 @@ class Main:
             "endscreen": EndScreen(self),
         }
         self.change_state("mainmenu")
-        self.running = True
-    
+        
     def change_state(self, state : str):
         self.state = self.states[state]
         if state == "battleship":
@@ -41,6 +60,7 @@ class Main:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.running = False
+                pygame.mixer.music.stop()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.pressed_actions["mouse"][1] = pygame.mouse.get_pos()

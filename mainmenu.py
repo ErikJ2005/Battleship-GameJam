@@ -4,20 +4,35 @@ import socket
 import threading
 from state import State
 
+class Slider:
+    def __init__(self):
+        self.x = 100
+        self.y = 100
+
+        self.slider_value = 1
+    
+    def update(self):
+        pass
+
+    def render(self):
+        pass
+
 class Button(State):
-    def __init__(self, spill, x: int, y: int, width: int, height: int, text: str):
+    def __init__(self, spill, x: int, y: int, width: int, height: int, text: str, image : str):
         super().__init__(spill)
         self.x = x
         self.y = y
         self.width = width
         self.height = height     
         
-        self.button = pygame.image.load("images/buttons.png")
+        self.button = pygame.image.load(image)
         self.button = pygame.transform.scale(self.button, (width, height))
         self.rect = pygame.Rect(x - (width + 4) // 2, y - (height + 4) // 2, width + 4, height + 4)
         self.font = pygame.font.Font(None, height - 3)
         self.text = text
         self.color = (0, 0, 0)
+
+        
 
     def render(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -29,6 +44,12 @@ class Button(State):
 class MainMenu(State):
     def __init__(self, spill):
         super().__init__(spill)
+        pygame.mixer.init()
+        # Load and play the music in a loop
+        self.button_sound = pygame.mixer.Sound("music/button.wav")
+        self.button_sound.set_volume(2)
+        self.sound_id = None
+        
         self.UDP_PORT = 50000
         self.TIMEOUT = 4
         self.discovered_servers = []  # List of discovered server IPs
@@ -42,9 +63,9 @@ class MainMenu(State):
         self.ship2 = pygame.transform.flip(self.ship2, 1, 0)
 
         # Buttons
-        self.host_game = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2, 300, 50, "Host game")
-        self.join_game = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 + 100, 300, 50, "Join game")
-        self.singleplayer_game = Button(self, self.spill.screen.get_width()//2, self.spill.screen.get_height() // 2 + 200, 300, 50, "Singleplayer")
+        self.host_game = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2, 300, 50, "Host game", "images/buttons.png")
+        self.join_game = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 + 100, 300, 50, "Join game", "images/buttons.png")
+        self.singleplayer_game = Button(self, self.spill.screen.get_width()//2, self.spill.screen.get_height() // 2 + 200, 300, 50, "Singleplayer", "images/buttons.png")
 
         # Start listening for servers in a separate thread
         self.running = True
@@ -84,6 +105,7 @@ class MainMenu(State):
 
         # Host game button click
         if self.host_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+            self.button_sound.play()
             subprocess.Popen(["python", "host.py"])
             self.spill.ip = socket.gethostbyname(socket.gethostname())
             self.spill.change_state("battleship")
@@ -91,15 +113,19 @@ class MainMenu(State):
         # Check if any IP is clicked
         for i, ip in enumerate(self.discovered_servers):
             ip_rect = pygame.Rect(self.spill.screen.get_width() - 350, 115 + i * 40, 300, 30)
-            if ip_rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+            if ip_rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.sound_id != i:
+                self.button_sound.play()
                 self.selected_ip = ip
+                self.sound_id = i
 
         # Join game button click
         if self.join_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.selected_ip:
+            self.button_sound.play()
             self.spill.ip = self.selected_ip
             self.spill.change_state("battleship")
         
         if self.singleplayer_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+            self.button_sound.play()
             self.spill.change_state("localbattleships")
 
     def render(self):
