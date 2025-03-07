@@ -5,6 +5,7 @@ from mainmenu import MainMenu
 from battleship import BattleShips
 from game_end_screen import EndScreen
 from local_battleship import LocalBattleships
+from settings import Settings
 
 class Main:
     def __init__(self):
@@ -16,11 +17,10 @@ class Main:
         pygame.mixer.music.set_volume(0.3)  # float tall
         
         # Volum nivåer
-        self.ship_placing_volume = 2
         self.miss_volume = 1
-        self.hit_volume = 3
+        self.hit_volume = 1
         self.music_volume = 0.3
-        self.button_volume = 2
+        self.button_volume = 1
         
         pygame.init()
 
@@ -29,7 +29,8 @@ class Main:
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
         
-        self.pressed_actions = {"mouse": [False, (0, 0)], "enter" : False, "key" : [False,""], "backspace" : False, "rotate" : "horizontal"}
+        self.pressed_actions = {"mouse": [False, (0, 0)], "enter" : False, "key" : [False,""], "backspace" : False, "rotate" : "horizontal", "slider": False}
+        self.pressed = True
         
         self.ip = ""
         self.winner = ""
@@ -37,10 +38,11 @@ class Main:
         self.font = pygame.font.Font(None, 32)
         
         self.states = {
-            "mainmenu": MainMenu(self),
-            "battleship": BattleShips(self, True),
+            "mainmenu" : MainMenu(self),
+            "battleship" : BattleShips(self, True),
             "localbattleships" : LocalBattleships(self),
-            "endscreen": EndScreen(self),
+            "endscreen" : EndScreen(self),
+            "settings" : Settings(self),
         }
         self.change_state("mainmenu")
         
@@ -65,8 +67,13 @@ class Main:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.pressed_actions["mouse"][1] = pygame.mouse.get_pos()
                 self.pressed_actions["mouse"][0] = True
-            else:
+                self.pressed_actions["slider"] = True
+            else: 
                 self.pressed_actions["mouse"][0] = False
+                
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.pressed_actions["slider"] = False
+                self.pressed = True
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
@@ -83,6 +90,7 @@ class Main:
                     self.pressed_actions["key"] = [True, event.unicode]
 
     def update(self):
+        pygame.mixer.music.set_volume(self.music_volume)  # float tall
         self.state.update()
     
     def render(self):

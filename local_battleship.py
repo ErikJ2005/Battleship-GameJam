@@ -48,6 +48,11 @@ class Bot(Player):
         self.ship_sizes = []
         self.battle_focus = False
 
+        self.splash = pygame.mixer.Sound("music/splash.wav")
+        self.explosion = pygame.mixer.Sound("music/explosion.wav")
+        self.splash.set_volume(self.spill.miss_volume)
+        self.explosion.set_volume(self.spill.hit_volume)
+
 
     def place_ships(self,board: list, ship_sizes: list):
         """
@@ -262,6 +267,11 @@ class LocalBattleships(BattleShips):
         self.battleship_attack = False
         self.destroyed_ships = 0
 
+        self.splash = pygame.mixer.Sound("music/splash.wav")
+        self.explosion = pygame.mixer.Sound("music/explosion.wav")
+        self.splash.set_volume(self.spill.miss_volume)
+        self.explosion.set_volume(self.spill.hit_volume)
+
 
     def good_attack_checker(self, attacker: Player, defender: Player):
         """
@@ -324,6 +334,7 @@ class LocalBattleships(BattleShips):
                     
             if self.player.place_ship(self.player.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
                 self.ship_index += 1  # Gå videre til neste skip
+                self.splash.play()
                         
             else:
                 print("Kan ikke plassere skipet her!")

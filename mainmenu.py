@@ -4,19 +4,6 @@ import socket
 import threading
 from state import State
 
-class Slider:
-    def __init__(self):
-        self.x = 100
-        self.y = 100
-
-        self.slider_value = 1
-    
-    def update(self):
-        pass
-
-    def render(self):
-        pass
-
 class Button(State):
     def __init__(self, spill, x: int, y: int, width: int, height: int, text: str, image : str):
         super().__init__(spill)
@@ -32,14 +19,12 @@ class Button(State):
         self.text = text
         self.color = (0, 0, 0)
 
-        
-
-    def render(self, screen):
+    def render(self, screen, show_text = True):
         pygame.draw.rect(screen, self.color, self.rect)
         screen.blit(self.button, (self.x - self.width // 2, self.y - self.height // 2))
-        button_text = self.font.render(self.text, True, (0, 0, 0))
-        screen.blit(button_text, (self.rect.x + (self.rect.width - button_text.get_width()) // 2, 
-                                  self.rect.y + (self.rect.height - button_text.get_height()) // 2))
+        if show_text == True:
+            button_text = self.font.render(self.text, True, (0, 0, 0))
+            screen.blit(button_text, (self.rect.x + (self.rect.width - button_text.get_width()) // 2, self.rect.y + (self.rect.height - button_text.get_height()) // 2))
 
 class MainMenu(State):
     def __init__(self, spill):
@@ -47,7 +32,7 @@ class MainMenu(State):
         pygame.mixer.init()
         # Load and play the music in a loop
         self.button_sound = pygame.mixer.Sound("music/button.wav")
-        self.button_sound.set_volume(2)
+        self.button_sound.set_volume(self.spill.button_volume)
         self.sound_id = None
         
         self.UDP_PORT = 50000
@@ -66,7 +51,8 @@ class MainMenu(State):
         self.host_game = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2, 300, 50, "Host game", "images/buttons.png")
         self.join_game = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 + 100, 300, 50, "Join game", "images/buttons.png")
         self.singleplayer_game = Button(self, self.spill.screen.get_width()//2, self.spill.screen.get_height() // 2 + 200, 300, 50, "Singleplayer", "images/buttons.png")
-
+        self.settings = Button(self, 50, 50, 50, 50, "settings", "images/settings.png")
+        
         # Start listening for servers in a separate thread
         self.running = True
         threading.Thread(target=self.listen_for_servers, daemon=True).start()
@@ -102,7 +88,14 @@ class MainMenu(State):
         self.host_game.color = (200, 200, 200) if self.host_game.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
         self.join_game.color = (200, 200, 200) if self.join_game.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
         self.singleplayer_game.color = (200, 200, 200) if self.singleplayer_game.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
-
+        self.settings.color = (200, 200, 200) if self.settings.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
+        
+        # Host game button click
+        if self.settings.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0]:
+            self.button_sound.play()
+            self.spill.pressed = False
+            self.spill.change_state("settings")
+        
         # Host game button click
         if self.host_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
             self.button_sound.play()
@@ -124,7 +117,7 @@ class MainMenu(State):
             self.spill.ip = self.selected_ip
             self.spill.change_state("battleship")
         
-        if self.singleplayer_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
+        if self.singleplayer_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0]:
             self.button_sound.play()
             self.spill.change_state("localbattleships")
 
@@ -139,6 +132,7 @@ class MainMenu(State):
         self.host_game.render(self.spill.screen)
         self.join_game.render(self.spill.screen)
         self.singleplayer_game.render(self.spill.screen)
+        self.settings.render(self.spill.screen, False)
 
         self.draw_text("Online servers", 40, (0, 0, 0), self.spill.screen.get_width() - 200, 100)
         # Display discovered IPs
