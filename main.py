@@ -17,10 +17,10 @@ class Main:
         pygame.mixer.music.set_volume(0.3)  # float tall
 
         # Volum nivåer
-        self.miss_volume = 1
-        self.hit_volume = 1
-        self.music_volume = 0.3
-        self.button_volume = 1
+        self.miss_volume = 0.2
+        self.hit_volume = 0.2
+        self.music_volume = 0.2
+        self.button_volume = 0.5
         
         pygame.init()
 
