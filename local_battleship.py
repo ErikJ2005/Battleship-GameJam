@@ -319,12 +319,7 @@ class LocalBattleships(BattleShips):
         
         
         """
-        if self.spill.pressed_actions["key"][0] and self.spill.pressed_actions["key"][1] == "r":
-            if self.orientation == "horizontal":
-                self.orientation = "vertical"
-            else:
-                self.orientation = "horizontal"
-            self.spill.pressed_actions["key"] = [False, ""]  # Reset key press
+        self.orientation = self.spill.pressed_actions["rotate"]
         
         # plassering av skip
         if self.spill.pressed_actions["mouse"][0] and len(self.player.ships) < 5:
