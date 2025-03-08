@@ -5,21 +5,31 @@ import json  # Import JSON module
 
 class Player(State):
     def __init__(self, spill, player_id):
+        """ Spiller klasse som har all funksjonaliteten en spiller trenger for å kunne spille
+
+        Args:
+            spill (_type_): peker tilbake til hoved skriptet
+            player_id (_type_): id til spilleren for å holde styr på hvem som er hvem
+        """
         super().__init__(spill)
         self.player_id = player_id
-        self.ships = []  # List of ships with position, size, and health
-        self.attacked_positions = []
-        self.ships_placed = False  # Track if the player has placed all ships
+        self.ships = []  # Liste med skipene 
+        self.attacked_positions = [] # Liste med angrepene
+        self.ships_placed = False  # Hålder styr på om skipene er plasert
         self.grid_size = 10
         self.cell_size = 40
         
+        # Brettet til spilleren
         self.board = [[0 for _ in range(self.grid_size)] for _ in range(self.grid_size)]
         
+        # Hålder styr på hvem sin tur det er
         self.my_turn = False
         
+        # Finner hvor fiende brette er for at man skal kunne angripe
         self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - 40) // 2
         self.grid_offset_y = 50
         
+        # Setter opp lydefekter 
         self.splash = pygame.mixer.Sound("music/splash.wav")
         self.explosion = pygame.mixer.Sound("music/explosion.wav")
         self.splash.set_volume(self.spill.miss_volume)
@@ -103,12 +113,20 @@ class Player(State):
     
 class BattleShips(State):
     def __init__(self, spill, networking):
+        """ Hoved spillet som er det som blir kjørt når man spiller
+
+        Args:
+            spill (_type_): peker mot hoved scriptet
+            networking (_type_): Sier om man skal bruke netverk eller ikke så man kan gjenbruke koden hvis man vil lage en singleplayer versjon
+        """
         super().__init__(spill)
+        # Alle bildene som blir brukt
         self.bg = pygame.image.load("images/battleship_bg.jpg")
         self.ship_image = pygame.image.load("images/ship.png")
         self.hit_image = pygame.image.load("images/hit.png")
         self.miss_image = pygame.image.load("images/miss.png")
         
+        # Setter opp lydeffekter
         self.splash = pygame.mixer.Sound("music/splash.wav")
         self.explosion = pygame.mixer.Sound("music/explosion.wav")
         self.splash.set_volume(self.spill.miss_volume)
@@ -117,6 +135,7 @@ class BattleShips(State):
         self.bg = pygame.transform.scale(self.bg, (self.spill.screen.get_width(), self.spill.screen.get_height()))
         self.font = pygame.font.Font(None, 24)
         
+        # Setter opp netverk og kobler til riktig ip
         if networking:
             self.net = None
             try:
@@ -142,22 +161,34 @@ class BattleShips(State):
         self.grid_size = 10
         self.cell_size = 40
         
+        # Finner hvor fiende brette skal tegnes
         self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - 40) // 2
         self.grid_offset_y = 50
         
         self.attack_phase = False 
         
+        # Skip informasjon
         self.ship_sizes = [2, 3, 3, 4, 5] 
         self.orientation = "horizontal" 
         self.ship_index = 0  
         self.ship_sunk = 0
         
     def update_grid_offset(self):
+        # Er her for å endre på hvor alt blir plassert his vi har et vindu som man kan justere størelsen på
         self.cell_size = self.spill.screen.get_width()//30
         self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - self.cell_size) // 2
         self.grid_offset_y = self.spill.screen.get_height()//12
         
     def send_data(self, ships : list, attacks : list) -> str:
+        """ Sender og motar data fre serveren
+
+        Args:
+            ships (list): Liste med kordinaten tol skipene og vilken vei de peker
+            attacks (list): Liste med hvor du har angrepet
+
+        Returns:
+            str: motar en string som ineholder all data fra motstander
+        """
         try:
             ships_str = json.dumps(ships)
             attacks_str = json.dumps(attacks)  
@@ -171,6 +202,15 @@ class BattleShips(State):
             return None 
         
     def draw_text(self, text : str, size : int, color : tuple, x: int, y : int):
+        """ Tegner teksten man skriver inn på skjermen
+
+        Args:
+            text (str): Teksten man vil at sal vises 
+            size (int): Størelsen på teksten
+            color (tuple): Fargen til teksten
+            x (int): x posisjonen til teksten
+            y (int): y posisjonen til teksten
+        """
         font  = pygame.font.Font(None, size)
         info = font.render(text, True, color)
         self.spill.screen.blit(info, (x - info.get_width() // 2,y - info.get_height() // 2))
@@ -190,8 +230,9 @@ class BattleShips(State):
                 self.received_ships.pop(index)
                 
     def update(self):
-        self.update_grid_offset()
+        self.update_grid_offset() # Oppdaterer hvor alt skal bli plassert
         try:
+            # Sjekker om r har blitt trykket
             if self.spill.pressed_actions["key"][0] and self.spill.pressed_actions["key"][1] == "r":
                 if self.orientation == "horizontal":
                     self.orientation = "vertical"
@@ -199,15 +240,19 @@ class BattleShips(State):
                     self.orientation = "horizontal"
                 self.spill.pressed_actions["key"] = [False, ""]
 
+            # Mottar og sender data
             received_data = self.send_data(self.player.ships, self.player.attacked_positions)
             
+            # splitter opp data-en for at den skal kunne brukes
             data_parts = received_data.split(":")
             
+            # Sjekker hvem sin tur det er som blir styrt av serveren
             if data_parts[5] == f"{self.player.player_id}":
                 self.player.my_turn = True
             else:
                 self.player.my_turn = False
 
+            # Plassering av skip
             if data_parts[1] == "True":
                 self.game_ready = True
                 if self.spill.pressed_actions["mouse"][0] and len(self.player.ships) < 5:
@@ -222,12 +267,14 @@ class BattleShips(State):
                         
                     self.spill.pressed_actions["mouse"][0] = False
             
+            # Angriper motstanderens brett
             if self.player.my_turn:
                 self.text_turn = "Attack the other player board"
                 if self.spill.pressed_actions["mouse"][0] and self.loaded_ships:
                     self.player.attack(self.player2.board)
                     self.spill.pressed_actions["mouse"][0] = False
                 
+            # Laster inn alle skip som motstanderen har plassert
             if data_parts[3] == "True" and not self.loaded_ships and len(self.player.ships) == 5:
                 self.loaded_ships = True
                 self.attack_phase = True
@@ -235,7 +282,8 @@ class BattleShips(State):
                 self.received_ships = json.loads(data_parts[2])
                 for i in range(5):
                     self.player2.place_ship(self.player2.board, self.received_ships[i][0][0][0], self.received_ships[i][0][0][1], self.received_ships[i][1], self.ship_sizes[i])
-                
+            
+            # Motar posisjonene hvor motstanderen har angrepet
             received_attacks = json.loads(data_parts[4])  
             
             for attacks in received_attacks:
@@ -246,9 +294,11 @@ class BattleShips(State):
                 elif self.player.board[x][y] == 1:
                     self.explosion.play()
                     self.player.board[x][y] = 2
-                    
+            
+            # Sjekker hvor man skip som har sunket
             self.ships_sunk(self.received_ships)
 
+            # Sjekker om alle skip er senket på ett av brettene
             if self.player.all_ships_sunk() and self.loaded_ships:
                 self.send_data(self.player.ships, self.player.attacked_positions)
                 self.net.disconnect()
@@ -261,7 +311,7 @@ class BattleShips(State):
                 self.spill.winner = "You Won!"
 
         except Exception as e:
-            print(f"Error handling data: {data_parts}")
+            print(f"Error handling data: {data_parts}") # Printer ut error meldingen hvis man motar data koden ikke kan håndtere
 
     def get_hovered_cells(self, mouse_x : int, mouse_y  : int) -> list:
         """ finner ut hvilke ruter som skal markers
@@ -273,14 +323,19 @@ class BattleShips(State):
         Returns:
             list: kordinatene hvor rutene skal markeres
         """
+        # Så lenge spillet ikke er klart returnerer den bare en tm liste
         if not self.game_ready or self.attack_phase or self.ship_index >= len(self.ship_sizes):
             return []
 
+        # Finenr cellen musen er i
         grid_x = (mouse_x - self.grid_offset_x) // self.cell_size
         grid_y = (mouse_y - self.grid_offset_y) // self.cell_size
 
+        # Sjekker at den er innenfor
         if 0 <= grid_x < self.grid_size and 0 <= grid_y < self.grid_size:
-            ship_size = self.ship_sizes[self.ship_index]
+            ship_size = self.ship_sizes[self.ship_index] # Finner størelsen til skipet man skal plasere
+            
+            # Sjekker retningen til skipet og returnerer listen med alle kordinatene skipet vil dekke
             if self.orientation == "horizontal":
                 if grid_x + ship_size <= self.grid_size:
                     return [(grid_x + i, grid_y) for i in range(ship_size)]
@@ -290,19 +345,23 @@ class BattleShips(State):
         return []
 
     def render(self):
+        # Tegner bakgrunnen
         self.bg = pygame.transform.scale(self.bg, (self.spill.screen.get_width(), self.spill.screen.get_height()))
         self.spill.screen.blit(self.bg, (0, 0))
         
+        # Finner cellene som skal markeres
         mouse_x, mouse_y = pygame.mouse.get_pos()
         hovered_cells = self.get_hovered_cells(mouse_x, mouse_y)
         
+        # Tegner brettet til spilleren
         for y in range(self.grid_size):
             for x in range(self.grid_size):
                 cell_x = self.grid_offset_x + (x * self.cell_size)
                 cell_y = self.grid_offset_y + (y * self.cell_size)
                 
                 pygame.draw.rect(self.spill.screen, (0, 0, 0), (cell_x, cell_y, self.cell_size, self.cell_size), 1)
-                
+        
+        # Tegner skipene til spilleren
         for ship in self.player.ships:
             positions, orientation = ship
             first_x, first_y = positions[0]
@@ -323,6 +382,7 @@ class BattleShips(State):
             if orientation == "horizontal":
                 self.spill.screen.blit(ship_image, (cell_x, cell_y))
         
+        # tegner hvor noen har skutt og brettet til mptstander
         for y in range(self.grid_size):
             for x in range(self.grid_size):
                 cell_x = self.grid_offset_x + (x * self.cell_size)
@@ -344,6 +404,7 @@ class BattleShips(State):
                     self.spill.screen.blit(miss_image, (enemy_x + 4, cell_y + 4))
                 pygame.draw.rect(self.spill.screen, (0, 0, 0), (enemy_x, cell_y, self.cell_size, self.cell_size), 1)
 
+        # Tegner ruten som skipet vil bli plassert
         if hovered_cells:
             for (x, y) in hovered_cells:
                 cell_x = self.grid_offset_x + (x * self.cell_size)
@@ -352,7 +413,7 @@ class BattleShips(State):
                 overlay.fill((150, 150, 150, 128))
                 self.spill.screen.blit(overlay, (cell_x, cell_y))
                 
-
+        # Skriver ut all tekst på skjermen
         if not self.game_ready:
             text = "Waiting for opponent..."
             self.draw_text(text, self.spill.screen.get_height()//8, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - self.spill.screen.get_height()//15)

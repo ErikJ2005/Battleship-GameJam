@@ -4,6 +4,18 @@ from mainmenu import Button
 
 class Slider:
     def __init__(self, spill, x, y, width, height, min_value, max_value, start_value):
+        """ Lager en slider som man kan bruke for å styre ting som volum som vi gjør i dette tilfellet
+
+        Args:
+            spill (_type_): refererer tilbake til hoved scriptet så vi kan lese av inputten
+            x (_type_): x posisjonen til der man vil at slideren skal være
+            y (_type_): y posisjonen til der man vil at slideren skal være
+            width (_type_): bredden til slideren
+            height (_type_): høyden til slideren
+            min_value (_type_): minste verdien til slideren
+            max_value (_type_): største verdien til slideren
+            start_value (_type_): start verdien til slideren
+        """
         self.spill = spill
         self.x = x
         self.y = y
@@ -13,26 +25,28 @@ class Slider:
         self.max_value = max_value
         self.value = start_value
         
+        # Setter størelsen på slider banen og håndtaket
         self.bar_rect = pygame.Rect(self.x - self.width // 2, self.y - self.height // 2, self.width, self.height)
-        self.slider_width = self.height  # Slider handle size
+        self.slider_width = self.height
         self.slider_rect = pygame.Rect(self.get_slider_x(), self.y - self.slider_width // 2, self.slider_width, self.slider_width)
         
         self.dragging = False
 
     def get_slider_x(self):
+        # returnerer x verdien hvor håndtaket på slideren skal være
         return self.bar_rect.left + (self.value - self.min_value) / (self.max_value - self.min_value) * self.width
 
     def update(self):
         mouse_pressed = self.spill.pressed_actions["slider"]
         mouse_pos = pygame.mouse.get_pos()
-        if mouse_pressed and (self.slider_rect.collidepoint(mouse_pos) or self.bar_rect.collidepoint(mouse_pos)):
-            relative_x = max(self.bar_rect.left, min(mouse_pos[0], self.bar_rect.right))
-            self.value = (relative_x - self.bar_rect.left) / self.width * (self.max_value - self.min_value) + self.min_value
-            self.slider_rect.x = self.get_slider_x() - self.slider_width // 2
+        if mouse_pressed and (self.slider_rect.collidepoint(mouse_pos) or self.bar_rect.collidepoint(mouse_pos)): # sjekker at man trykker på slideren
+            relative_x = max(self.bar_rect.left, min(mouse_pos[0], self.bar_rect.right)) # Sørger for at x verdien til håndtaket holder seg innenfor verdien til slideren
+            self.value = (relative_x - self.bar_rect.left) / self.width * (self.max_value - self.min_value) + self.min_value # Finner verdien som blir mellim minste verdien og største veriden man satt
+            self.slider_rect.x = self.get_slider_x() - self.slider_width // 2 # Finner den nye x posisjonen til håndtaket
 
     def render(self, screen):
-        pygame.draw.rect(screen, (200, 200, 200), self.bar_rect)  # Draw bar
-        pygame.draw.rect(screen, (100, 100, 100), self.slider_rect)  # Draw slider handle
+        pygame.draw.rect(screen, (200, 200, 200), self.bar_rect)  # tegner banen til slideren
+        pygame.draw.rect(screen, (100, 100, 100), self.slider_rect)  # tegner håndtaket til slideren
 
 
 class Settings(State):
@@ -54,6 +68,15 @@ class Settings(State):
         self.hit_slider = Slider(spill, self.spill.screen.get_width()//2, 400, 200, 30, 0, 1, self.spill.hit_volume)
     
     def draw_text(self, text : str, size : int, color : tuple, x: int, y : int):
+        """ Tegner teksten man skriver inn på skjermen
+
+        Args:
+            text (str): Teksten man vil at sal vises 
+            size (int): Størelsen på teksten
+            color (tuple): Fargen til teksten
+            x (int): x posisjonen til teksten
+            y (int): y posisjonen til teksten
+        """
         font  = pygame.font.Font(None, size)
         info = font.render(text, True, color)
         self.spill.screen.blit(info, (x - info.get_width() // 2,y - info.get_height() // 2))

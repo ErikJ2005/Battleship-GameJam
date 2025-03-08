@@ -21,7 +21,7 @@ class EndScreen(State):
     def update(self):
         self.back_to_main_menu.color = (200, 200, 200) if self.back_to_main_menu.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
         
-        # Host game button click
+        # Knapp for å gå tilbake til main menu
         if self.back_to_main_menu.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
             self.button_sound.play()
             self.spill.pressed_actions["mouse"][1] = (0,0)
