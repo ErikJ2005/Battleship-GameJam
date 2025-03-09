@@ -24,8 +24,12 @@ class Main:
         
         # Pygame og skjerm oppsett
         pygame.init()
-
         self.screen = pygame.display.set_mode((1200, 600))
+        pygame.display.set_caption("Battleships")
+        icon = pygame.image.load("images/battleship2.png")
+        pygame.display.set_icon(icon)
+        
+        
         self.running = True
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
