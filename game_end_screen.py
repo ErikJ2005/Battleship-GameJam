@@ -11,7 +11,7 @@ class EndScreen(State):
         self.bg = pygame.image.load("images/battleship_bg.jpg")
 
         self.button_sound = pygame.mixer.Sound("music/button.wav")
-        self.button_sound.set_volume(2)
+        self.button_sound.set_volume(self.spill.button_volume)
 
         self.bg = pygame.transform.scale(self.bg, (self.spill.screen.get_width(), self.spill.screen.get_height()))
         self.font = pygame.font.Font(None, 100)
