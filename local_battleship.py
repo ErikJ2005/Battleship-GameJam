@@ -364,7 +364,7 @@ class LocalBattleships(BattleShips):
         if not self.player.my_turn and self.loaded_ships:
             self.spill.pressed_actions["mouse"][1] = (0,0)  # Nullstill klikk
             self.spill.pressed_actions["mouse"][0] = False
-            self.text_turn = "Hope the oponent doesn't hit you"
+            self.text_turn = "Don't get hit!"
             while self.player2.attack(self, self.player) != 3: pass
             self.destroyed_ships = self.player2.battle_info[0]
             self.player.my_turn = True
@@ -457,7 +457,7 @@ class LocalBattleships(BattleShips):
                 self.spill.screen.blit(overlay, (cell_x, cell_y))
         # Tegner informasjonstekst
         if not self.attack_phase:
-            text = "Place your ships! Press 'R' to rotate. sizes of the ships you place are: [2, 3, 3, 4, 5] in that order "
+            text = "Place your ships! Press 'R' to rotate the ship"
             self.draw_text(text, 30, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
         else:
             text = "Time to battle!!"

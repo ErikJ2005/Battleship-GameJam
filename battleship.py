@@ -268,6 +268,8 @@ class BattleShips(State):
                 if self.spill.pressed_actions["mouse"][0] and self.loaded_ships:
                     self.player.attack(self.player2.board)
                     self.spill.pressed_actions["mouse"][0] = False
+            else:
+                self.text_turn = "Don't get hit!"
                 
             # Laster inn alle skip som motstanderen har plassert
             if data_parts[3] == "True" and not self.loaded_ships and len(self.player.ships) == 5:
@@ -413,7 +415,7 @@ class BattleShips(State):
             text = "Waiting for opponent..."
             self.draw_text(text, self.spill.screen.get_height()//8, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - self.spill.screen.get_height()//15)
         elif not self.attack_phase:
-            text = "Place your ships! Press 'R' to rotate. sizes of the ships you place are: [2, 3, 3, 4, 5] in that order "
+            text = "Place your ships! Press 'R' to rotate the ship"
             self.draw_text(text, self.spill.screen.get_height()//20, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - self.spill.screen.get_height()//15)
         else:
             text = "Time to battle!!"
