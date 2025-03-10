@@ -1,4 +1,5 @@
 # https://github.com/Ex1118/Battleship-GameJam.git
+# git config --global user.email "andreas.sanila@icloud.com"
 
 # Dette skal gjøre det mulig å kjøre spillet som en .exe fil:
 
@@ -47,6 +48,11 @@ class Bot(Player):
         self.battle_info = [[]]
         self.ship_sizes = []
         self.battle_focus = False
+
+        self.splash = pygame.mixer.Sound("music/splash.wav")
+        self.explosion = pygame.mixer.Sound("music/explosion.wav")
+        self.splash.set_volume(self.spill.miss_volume)
+        self.explosion.set_volume(self.spill.hit_volume)
 
 
     def place_ships(self,board: list, ship_sizes: list):
@@ -215,10 +221,12 @@ class Bot(Player):
                     if defender.board[grid_y][grid_x] == 0:
                         defender.board[grid_y][grid_x] = 3
                         attack_value = 3
+                        self.splash.play()
             
                     if defender.board[grid_y][grid_x] == 1:
                         defender.board[grid_y][grid_x] = 2
                         attack_value = 2
+                        self.explosion.play()
             
             # Hvis det er et nytt skudd legger programmet til et 1 sek delay   
             if attack_value == 2 or attack_value == 3:
@@ -250,6 +258,10 @@ class LocalBattleships(BattleShips):
         self.battleship_attack = False
         self.destroyed_ships = 0
 
+        self.splash = pygame.mixer.Sound("music/splash.wav")
+        self.explosion = pygame.mixer.Sound("music/explosion.wav")
+        self.splash.set_volume(self.spill.miss_volume)
+        self.explosion.set_volume(self.spill.hit_volume)
 
 
     def good_attack_checker(self, attacker: Player, defender: Player):
@@ -308,13 +320,7 @@ class LocalBattleships(BattleShips):
         
         Tips: Skru av hjemmekameraet ditt ellers vil Jeff Bazos se in i sjelen din...
         """
-        
-        if self.spill.pressed_actions["key"][0] and self.spill.pressed_actions["key"][1] == "r":
-            if self.orientation == "horizontal":
-                self.orientation = "vertical"
-            else:
-                self.orientation = "horizontal"
-            self.spill.pressed_actions["key"] = [False, ""]  # Reset key press
+        self.orientation = self.spill.pressed_actions["rotate"]
         
         # plassering av skip
         if self.spill.pressed_actions["mouse"][0] and len(self.player.ships) < 5:
@@ -324,6 +330,7 @@ class LocalBattleships(BattleShips):
                     
             if self.player.place_ship(self.player.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
                 self.ship_index += 1  # Gå videre til neste skip
+                self.splash.play()
                         
             else:
                 print("Kan ikke plassere skipet her!")
@@ -355,7 +362,9 @@ class LocalBattleships(BattleShips):
 
         # Bot sin tur
         if not self.player.my_turn and self.loaded_ships:
-            self.text_turn = "Hope the oponent doesn't hit you"
+            self.spill.pressed_actions["mouse"][1] = (0,0)  # Nullstill klikk
+            self.spill.pressed_actions["mouse"][0] = False
+            self.text_turn = "Don't get hit!"
             while self.player2.attack(self, self.player) != 3: pass
             self.destroyed_ships = self.player2.battle_info[0]
             self.player.my_turn = True
@@ -448,7 +457,7 @@ class LocalBattleships(BattleShips):
                 self.spill.screen.blit(overlay, (cell_x, cell_y))
         # Tegner informasjonstekst
         if not self.attack_phase:
-            text = "Place your ships! Press 'R' to rotate. sizes of the ships you place are: [2, 3, 3, 4, 5] in that order "
+            text = "Place your ships! Press 'R' to rotate the ship"
             self.draw_text(text, 30, (0, 0, 0), self.spill.screen.get_width() // 2, self.spill.screen.get_height() - 40)
         else:
             text = "Time to battle!!"
