@@ -35,9 +35,7 @@ class MainMenu(State):
         self.button_sound.set_volume(self.spill.button_volume)
         self.sound_id = None # Gjør at lyden kke blir spilt av flere ganger når man velger ip
         
-        # setter opp netverk variabler
-        self.UDP_PORT = 50000
-        self.TIMEOUT = 4
+        self.UDP_PORT = 50000 # Netverks port for udp socket
         self.discovered_servers = []  # Listen av ip-er man mottar
         self.selected_ip = None # ip-en man har valgt
 
@@ -61,7 +59,7 @@ class MainMenu(State):
         threading.Thread(target=self.listen_for_servers, daemon=True).start() 
 
     def listen_for_servers(self):
-        # Hører etter om den får inn et signal på den porten
+        # Hører etter om den får sendt en ip til den porten
         udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         udp_sock.bind(("", self.UDP_PORT))

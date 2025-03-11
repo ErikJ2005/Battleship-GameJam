@@ -44,7 +44,7 @@ class Main:
         
         self.font = pygame.font.Font(None, 32)
         
-        # Setter om states
+        # Setter opp states
         self.states = {
             "mainmenu" : MainMenu(self),
             "battleship" : BattleShips(self, True),
