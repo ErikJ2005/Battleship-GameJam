@@ -1,7 +1,7 @@
 import pygame
 from state import State
 from network import Network
-import json  # Import JSON module
+import json
 
 class Player(State):
     def __init__(self, spill, player_id):
@@ -112,7 +112,7 @@ class Player(State):
         return True
     
 class BattleShips(State):
-    def __init__(self, spill, networking):
+    def __init__(self, spill, networking : bool):
         """ Hoved spillet som er det som blir kjørt når man spiller
 
         Args:
@@ -250,8 +250,6 @@ class BattleShips(State):
                     if self.player.place_ship(self.player.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
                         self.splash.play()
                         self.ship_index += 1
-                    else:
-                        print("Kan ikke plassere skipet her!")
                         
                     self.spill.pressed_actions["mouse"][0] = False
             

@@ -1,5 +1,3 @@
-#https://github.com/ErikJ2005/Battleship-GameJam.git
-
 import pygame
 from mainmenu import MainMenu
 from battleship import BattleShips
@@ -28,7 +26,6 @@ class Main:
         pygame.display.set_caption("Battleships")
         icon = pygame.image.load("images/battleship2.png")
         pygame.display.set_icon(icon)
-        
         
         self.running = True
         self.width = self.screen.get_width()
