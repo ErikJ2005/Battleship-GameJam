@@ -64,10 +64,6 @@ class Skins:
                     
                     self.owned_items[2] = self.owned_items[2].replace(" ","").replace("]","").replace("'","").split(",")
 
-
-        
-                    
-                            
         except:
             self.owned_items = [[0, 0],[False for i in range(len(self.items))], ["images/ship.png", "images/hotdog.png", "images/pirateship.png", "images/spaceship.png"]]
             self.owned_items[1][0] = True

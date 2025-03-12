@@ -75,9 +75,16 @@ class Main:
         # Får inn alle inputs til spillet så man kan bruke det i alle scriptene for hele spillet
         for event in pygame.event.get():
             # Gjør at man kan lukke spillet
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+            if event.type == pygame.QUIT:
                 self.running = False
                 pygame.mixer.music.stop()
+            
+            if (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                if self.state != self.states["mainmenu"]:
+                    self.change_state("mainmenu")
+                else:
+                    self.running = False
+                    pygame.mixer.music.stop()
             
             # Får inn mus inputen og posisjonen til der man trykket
             if event.type == pygame.MOUSEBUTTONDOWN:

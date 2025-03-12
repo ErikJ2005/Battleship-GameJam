@@ -134,6 +134,7 @@ class BattleShips(State):
             self.image_scaler = 0
         else:
             self.image_scaler = 40
+            
         # Setter opp lydeffekter
         self.splash = pygame.mixer.Sound("music/splash.wav")
         self.explosion = pygame.mixer.Sound("music/explosion.wav")
