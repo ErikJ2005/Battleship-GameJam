@@ -302,7 +302,7 @@ class BattleShips(State):
             if self.player2.all_ships_sunk() and self.loaded_ships:
                 self.send_data(self.player.ships, self.player.attacked_positions)
                 self.net.disconnect()
-                self.skins.coins += 3
+                self.skins.coins += 5
                 self.skins.update()
                 self.spill.change_state("endscreen")
                 self.spill.winner = "You Won!"

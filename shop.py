@@ -14,11 +14,11 @@ class Skins:
         
         self.button_sound.set_volume(self.spill.button_volume)
         self.coins = 0
-        self.items = [[pygame.image.load("images/ship.png"), 10],
-                            [pygame.image.load("images/hotdog.png"), 15],
-                            [pygame.image.load("images/gummibåt.png"), 30],
-                            [pygame.image.load("images/pirateship.png"), 40],
-                            [pygame.image.load("images/spaceship.png"), 60]]
+        self.items = [[pygame.image.load("images/ship.png"), 0],
+                        [pygame.image.load("images/hotdog.png"), 10],
+                        [pygame.image.load("images/gummibåt.png"), 15],
+                        [pygame.image.load("images/pirateship.png"), 25],
+                        [pygame.image.load("images/spaceship.png"), 35]]
         
         if image_dir == 0:
             self.items[0][0] = pygame.transform.rotate(self.items[0][0], 0)
@@ -155,8 +155,8 @@ class Shop(State):
     def __init__(self, spill):
         super().__init__(spill)
         self.screen = spill.screen
-        self.slider = Slider(spill, self.screen.get_width()//2, self.screen.get_height()//2 + 150, 1000, 50, 0, 1000, 0)
         self.skins = Skins(spill, 1)
+        self.slider = Slider(spill, self.screen.get_width()//2, self.screen.get_height()//2 + 150, 1000, 50, 0, len(self.skins.items)*150, 0)
         self.back_to_main_menu = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 + 250, 300, 50, "Main-menu", "images/buttons.png")
     
     def update(self):
