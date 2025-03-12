@@ -16,10 +16,14 @@ class Network():
     def disconnect(self):
         self.client.close()
         
-    def send(self, data):
-        """
-        :param data: str
-        :return: str
+    def send(self, data : str) -> str:
+        """ Sender data over nett ved hjelp at socket
+
+        Args:
+            data (str): data som skal bli sendt
+
+        Returns:
+            str: data som blir mottat
         """
         try:
             self.client.send(str.encode(data))

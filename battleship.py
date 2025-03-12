@@ -1,7 +1,7 @@
 import pygame
 from state import State
 from network import Network
-import json  # Import JSON module
+import json
 
 class Player(State):
     def __init__(self, spill, player_id):
@@ -112,7 +112,7 @@ class Player(State):
         return True
     
 class BattleShips(State):
-    def __init__(self, spill, networking):
+    def __init__(self, spill, networking : bool):
         """ Hoved spillet som er det som blir kjørt når man spiller
 
         Args:
@@ -173,12 +173,6 @@ class BattleShips(State):
         self.ship_index = 0  
         self.ship_sunk = 0
         
-    def update_grid_offset(self):
-        # Er her for å endre på hvor alt blir plassert his vi har et vindu som man kan justere størelsen på
-        self.cell_size = self.spill.screen.get_width()//30
-        self.grid_offset_x = (self.spill.screen.get_width() - (self.grid_size * self.cell_size * 2) - self.cell_size) // 2
-        self.grid_offset_y = self.spill.screen.get_height()//12
-        
     def send_data(self, ships : list, attacks : list) -> str:
         """ Sender og motar data fre serveren
 
@@ -230,9 +224,8 @@ class BattleShips(State):
                 self.received_ships.pop(index)
                 
     def update(self):
-        self.update_grid_offset() # Oppdaterer hvor alt skal bli plassert
         try:
-            # Sjekker om r har blitt trykket
+            # Endrer seg når r blir trykket
             self.orientation = self.spill.pressed_actions["rotate"]
 
             # Mottar og sender data
@@ -257,8 +250,6 @@ class BattleShips(State):
                     if self.player.place_ship(self.player.board, grid_x, grid_y, self.orientation, self.ship_sizes[self.ship_index]):
                         self.splash.play()
                         self.ship_index += 1
-                    else:
-                        print("Kan ikke plassere skipet her!")
                         
                     self.spill.pressed_actions["mouse"][0] = False
             
@@ -275,7 +266,6 @@ class BattleShips(State):
             if data_parts[3] == "True" and not self.loaded_ships and len(self.player.ships) == 5:
                 self.loaded_ships = True
                 self.attack_phase = True
-                print("ships placed")
                 self.received_ships = json.loads(data_parts[2])
                 for i in range(5):
                     self.player2.place_ship(self.player2.board, self.received_ships[i][0][0][0], self.received_ships[i][0][0][1], self.received_ships[i][1], self.ship_sizes[i])
@@ -292,7 +282,7 @@ class BattleShips(State):
                     self.explosion.play()
                     self.player.board[x][y] = 2
             
-            # Sjekker hvor man skip som har sunket
+            # Sjekker hvor mange skip som har sunket
             self.ships_sunk(self.received_ships)
 
             # Sjekker om alle skip er senket på ett av brettene
@@ -374,12 +364,9 @@ class BattleShips(State):
             cell_x = self.grid_offset_x + (first_x * self.cell_size) + ((self.cell_size - ship_height) // 2 if orientation == "vertical" else 0)
             cell_y = self.grid_offset_y + (first_y * self.cell_size) + ((self.cell_size - ship_height) // 2 if orientation == "horizontal" else 0)
 
-            if orientation == "vertical":
-                self.spill.screen.blit(ship_image, (cell_x, cell_y))
-            if orientation == "horizontal":
-                self.spill.screen.blit(ship_image, (cell_x, cell_y))
+            self.spill.screen.blit(ship_image, (cell_x, cell_y))
         
-        # tegner hvor noen har skutt og brettet til mptstander
+        # Tegner hvor noen har skutt og brettet til motstander
         for y in range(self.grid_size):
             for x in range(self.grid_size):
                 cell_x = self.grid_offset_x + (x * self.cell_size)
@@ -401,7 +388,7 @@ class BattleShips(State):
                     self.spill.screen.blit(miss_image, (enemy_x + 4, cell_y + 4))
                 pygame.draw.rect(self.spill.screen, (0, 0, 0), (enemy_x, cell_y, self.cell_size, self.cell_size), 1)
 
-        # Tegner ruten som skipet vil bli plassert
+        # Tegner rutene som skipe vil dekke når det blir plassert
         if hovered_cells:
             for (x, y) in hovered_cells:
                 cell_x = self.grid_offset_x + (x * self.cell_size)
