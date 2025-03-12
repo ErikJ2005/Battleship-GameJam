@@ -53,6 +53,7 @@ class Bot(Player):
         self.explosion = pygame.mixer.Sound("music/explosion.wav")
         self.splash.set_volume(self.spill.miss_volume)
         self.explosion.set_volume(self.spill.hit_volume)
+        
 
 
     def place_ships(self,board: list, ship_sizes: list):
@@ -246,7 +247,7 @@ class LocalBattleships(BattleShips):
         Args:
             spill (main): Den karakteren i alle filmer og spill som de fleste liker best alltid.
         """
-        super().__init__(spill,False)
+        super().__init__(spill, False)
         self.player = Player(spill,0)
         self.player.destroyed_ships = 0
         self.player.good_attacks = []
@@ -263,6 +264,8 @@ class LocalBattleships(BattleShips):
         self.explosion = pygame.mixer.Sound("music/explosion.wav")
         self.splash.set_volume(self.spill.miss_volume)
         self.explosion.set_volume(self.spill.hit_volume)
+        
+        
 
 
     def good_attack_checker(self, attacker: Player, defender: Player):
@@ -374,10 +377,12 @@ class LocalBattleships(BattleShips):
         # Sjekker om en spiller har vunnet
         if self.player.all_ships_sunk() and self.loaded_ships:
             self.spill.change_state("endscreen")
-            self.spill.winner = "You lost!"
+            self.spill.winner = "You lost! You got 0 coins :("
         if self.player2.all_ships_sunk() and self.loaded_ships:
+            self.skins.coins += 2
+            self.skins.update()
             self.spill.change_state("endscreen")
-            self.spill.winner = "You Won!"  
+            self.spill.winner = f"You Won! You got 2 coins!"  
                 
 
     def render(self):
@@ -407,13 +412,13 @@ class LocalBattleships(BattleShips):
 
             # Skalér bildet for å dekke hele skipet
             ship_width = self.cell_size * len(positions)
-            ship_height = ship_width//5
+            ship_height = ship_width//5 + self.image_scaler
 
             ship_image = pygame.transform.scale(self.ship_image, (ship_width, ship_height))
 
             # Roter bildet hvis nødvendig
             if orientation == "vertical":
-                ship_image = pygame.transform.rotate(ship_image, -90)
+                ship_image = pygame.transform.rotate(ship_image, 90)
                 
             # Beregn posisjon på skjermen
             cell_x = self.grid_offset_x + (first_x * self.cell_size) + ((self.cell_size-ship_height)//2 if orientation == "vertical" else 0)

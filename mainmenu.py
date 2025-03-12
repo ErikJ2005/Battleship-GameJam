@@ -53,6 +53,7 @@ class MainMenu(State):
         self.join_game = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 + 100, 300, 50, "Join game", "images/buttons.png")
         self.singleplayer_game = Button(self, self.spill.screen.get_width()//2, self.spill.screen.get_height() // 2 + 200, 300, 50, "Singleplayer", "images/buttons.png")
         self.settings = Button(self, 50, 50, 50, 50, "settings", "images/settings.png")
+        self.shop = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 - 100, 300, 50, "Shop", "images/buttons.png")
         
         
         self.running = True
@@ -101,6 +102,7 @@ class MainMenu(State):
         self.join_game.color = (200, 200, 200) if self.join_game.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
         self.singleplayer_game.color = (200, 200, 200) if self.singleplayer_game.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
         self.settings.color = (200, 200, 200) if self.settings.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
+        self.shop.color = (200, 200, 200) if self.shop.rect.collidepoint(pygame.mouse.get_pos()) else (0,0,0)
         
         # Settings knappen
         if self.settings.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0]:
@@ -133,6 +135,11 @@ class MainMenu(State):
         if self.singleplayer_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0]:
             self.button_sound.play()
             self.spill.change_state("localbattleships")
+        
+        # Knapp for å åpne shop
+        if self.shop.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0]:
+            self.button_sound.play()
+            self.spill.change_state("shop")
 
     def render(self):
         # Tegner bakgrun og overskriften
@@ -146,6 +153,7 @@ class MainMenu(State):
         self.join_game.render(self.spill.screen)
         self.singleplayer_game.render(self.spill.screen)
         self.settings.render(self.spill.screen, False)
+        self.shop.render(self.spill.screen)
 
         # Tegner listen med ip-er
         self.draw_text("Online servers", 40, (0, 0, 0), self.spill.screen.get_width() - 200, 100)

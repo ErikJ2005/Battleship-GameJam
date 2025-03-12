@@ -6,6 +6,7 @@ from battleship import BattleShips
 from game_end_screen import EndScreen
 from local_battleship import LocalBattleships
 from settings import Settings
+from shop import Shop
 
 class Main:
     def __init__(self):
@@ -51,6 +52,7 @@ class Main:
             "localbattleships" : LocalBattleships(self),
             "endscreen" : EndScreen(self),
             "settings" : Settings(self),
+            "shop" : Shop(self),
         }
         self.change_state("mainmenu")
     
@@ -113,3 +115,4 @@ class Main:
 main = Main()
 while main.running:
     main.main_loop()
+
