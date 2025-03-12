@@ -99,10 +99,6 @@ class Skins:
                         file.write("")
                         file.write(f"{self.owned_items}")
                 
-                
-                
-        
-    
     def draw_text(self, text: str, size: int, color: tuple, x: int, y: int):
         """ Tegner teksten man skriver inn på skjermen
 
