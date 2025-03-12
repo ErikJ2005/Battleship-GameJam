@@ -32,7 +32,7 @@ class Main:
         self.height = self.screen.get_height()
         
         # Input setup
-        self.pressed_actions = {"mouse": [False, (0, 0)], "enter" : False, "key" : [False,""], "backspace" : False, "rotate" : "horizontal", "slider": False}
+        self.pressed_actions = {"mouse": [False, (0, 0)], "enter" : False, "backspace" : False, "rotate" : "horizontal", "slider": False}
         self.pressed = True
         
         # Variabler som brukes over flere scripts
