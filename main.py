@@ -1,5 +1,3 @@
-#https://github.com/ErikJ2005/Battleship-GameJam.git
-
 import pygame
 from mainmenu import MainMenu
 from battleship import BattleShips
@@ -30,7 +28,6 @@ class Main:
         icon = pygame.image.load("images/battleship2.png")
         pygame.display.set_icon(icon)
         
-        
         self.running = True
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
@@ -45,7 +42,7 @@ class Main:
         
         self.font = pygame.font.Font(None, 32)
         
-        # Setter om states
+        # Setter opp states
         self.states = {
             "mainmenu" : MainMenu(self),
             "battleship" : BattleShips(self, True),
