@@ -412,7 +412,7 @@ class LocalBattleships(BattleShips):
 
             # Skalér bildet for å dekke hele skipet
             ship_width = self.cell_size * len(positions)
-            ship_height = ship_width//5 + self.image_scaler
+            ship_height = ship_width//5
 
             ship_image = pygame.transform.scale(self.ship_image, (ship_width, ship_height))
 

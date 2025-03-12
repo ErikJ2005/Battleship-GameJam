@@ -123,17 +123,12 @@ class BattleShips(State):
         super().__init__(spill)
         # Alle bildene som blir brukt
         self.bg = pygame.image.load("images/battleship_bg.jpg")
-        self.ship_image = pygame.image.load("images/ship.png")
         self.hit_image = pygame.image.load("images/hit.png")
         self.miss_image = pygame.image.load("images/miss.png")
 
         self.skins = Skins(spill, 0)
         
         self.ship_image = self.skins.items[self.skins.owned_items[0][1]][0]
-        if self.skins.owned_items[0][1] == 0:
-            self.image_scaler = 0
-        else:
-            self.image_scaler = 40
             
         # Setter opp lydeffekter
         self.splash = pygame.mixer.Sound("music/splash.wav")
@@ -370,7 +365,7 @@ class BattleShips(State):
             first_x, first_y = positions[0]
 
             ship_width = self.cell_size * len(positions)
-            ship_height = ship_width // 5 + self.image_scaler
+            ship_height = ship_width // 5
 
             ship_image = pygame.transform.scale(self.ship_image, (ship_width, ship_height))
 

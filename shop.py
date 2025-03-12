@@ -132,7 +132,7 @@ class Skins:
             pygame.draw.rect(self.screen, (0, 0, 0), (30+300*i - slider.value, self.screen.get_height()//2 - 200, 270, self.screen.get_height()//2 + 75), 10)
             
             self.items[i][0] = pygame.transform.scale(self.items[i][0], self.item_scale[i])
-            self.screen.blit(self.items[i][0], (150 + 300*i - slider.value - self.item_scale[i][0]//2, self.screen.get_height()//2 - 200))
+            self.screen.blit(self.items[i][0], (150 + 300*i - slider.value - self.item_scale[i][0]//2, self.screen.get_height()//2 - 170))
             if not self.owned_items[1][i]:
                 self.draw_text(f"Cost: {self.items[i][1]}", 30, (0,0,0), 220 + 300*i - slider.value, self.screen.get_height()//2 - 170)
             
