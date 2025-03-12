@@ -39,6 +39,7 @@ class Main:
         # Variabler som brukes over flere scripts
         self.ip = ""
         self.winner = ""
+        self.disconnect = False
         
         self.font = pygame.font.Font(None, 32)
         
@@ -80,7 +81,9 @@ class Main:
                 pygame.mixer.music.stop()
             
             if (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                if self.state != self.states["mainmenu"]:
+                if self.state == self.states["battleship"]:
+                    self.disconnect = True
+                elif self.state != self.states["mainmenu"]:
                     self.change_state("mainmenu")
                 else:
                     self.running = False
@@ -95,6 +98,7 @@ class Main:
                 self.pressed_actions["mouse"][0] = False
                 
             if event.type == pygame.MOUSEBUTTONUP:
+                self.pressed_actions["mouse"][1] = (0,0)
                 self.pressed_actions["slider"] = False
                 self.pressed = True
             

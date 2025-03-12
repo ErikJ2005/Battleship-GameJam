@@ -15,10 +15,10 @@ class Skins:
         self.button_sound.set_volume(self.spill.button_volume)
         self.coins = 0
         self.items = [[pygame.image.load("images/ship.png"), 0],
-                        [pygame.image.load("images/hotdog.png"), 10],
-                        [pygame.image.load("images/gummibåt.png"), 15],
-                        [pygame.image.load("images/pirateship.png"), 25],
-                        [pygame.image.load("images/spaceship.png"), 35]]
+                        [pygame.image.load("images/hotdog.png"), 50],
+                        [pygame.image.load("images/gummibåt.png"), 100],
+                        [pygame.image.load("images/pirateship.png"), 250],
+                        [pygame.image.load("images/spaceship.png"), 500]]
         
         if image_dir == 0:
             self.items[0][0] = pygame.transform.rotate(self.items[0][0], 0)
@@ -82,7 +82,7 @@ class Skins:
                 file.write(f"{self.owned_items}")
         
         for i in range(len(self.buttons)):
-            if self.buttons[i].collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0]:
+            if self.buttons[i].collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0] and self.spill.pressed:
                 if self.coins >= self.items[i][1] and not self.owned_items[1][i]:
                     self.button_sound.play()
                     self.owned_items[1][i] = True
@@ -120,15 +120,17 @@ class Skins:
 
     def render(self, slider):
         for i in range(len(self.items)):
-            self.buttons[i] = pygame.Rect(110 + 300*i - slider.value - 50//4, self.screen.get_height()//2 - 200, 100, 300)
+            self.buttons[i] = pygame.Rect(30+300*i - slider.value, self.screen.get_height()//2 - 200, 270, self.screen.get_height()//2 + 75)
+            
             if self.owned_items[0][1] == i:
-                pygame.draw.rect(self.screen, (200, 200, 200), self.buttons[i])
+                pygame.draw.rect(self.screen, (139, 0, 0), self.buttons[i])
             elif self.buttons[i].collidepoint(pygame.mouse.get_pos()):
-                pygame.draw.rect(self.screen, (230, 230, 230), self.buttons[i])
+                pygame.draw.rect(self.screen, (200, 200, 200), self.buttons[i])
             else:
                 pygame.draw.rect(self.screen, (255, 255, 255), self.buttons[i])
-            pygame.draw.rect(self.screen, (0, 0, 0), (300*i - slider.value, 50, 30, self.screen.get_height()//2 + 75))
-            pygame.draw.rect(self.screen, (0, 0, 0), (300*i - slider.value, 50, 300, 30))
+                
+            pygame.draw.rect(self.screen, (0, 0, 0), (30+300*i - slider.value, self.screen.get_height()//2 - 200, 270, self.screen.get_height()//2 + 75), 10)
+            
             self.items[i][0] = pygame.transform.scale(self.items[i][0], self.item_scale[i])
             self.screen.blit(self.items[i][0], (150 + 300*i - slider.value - self.item_scale[i][0]//2, self.screen.get_height()//2 - 200))
             if not self.owned_items[1][i]:
@@ -140,10 +142,7 @@ class Skins:
             elif self.owned_items[1][i]:
                 self.unlocked = pygame.transform.scale(self.unlocked, (50*1.2,75))
                 self.screen.blit(self.unlocked, (140 + 300*i - slider.value - 50//2, self.screen.get_height()//2 - 100))
-                
-        pygame.draw.rect(self.screen, (0, 0, 0), (300*(i+1) - slider.value, 50, 30, self.screen.get_height()//2 + 75))
-
-        self.draw_text(f"Coins: {self.coins}", 30, (0,0,0), self.screen.get_width() - 50, 30)
+        self.draw_text(f"Coins: {self.coins}", 30, (0,0,0), self.screen.get_width() - 100, 30)
 
 
 
@@ -151,8 +150,16 @@ class Shop(State):
     def __init__(self, spill):
         super().__init__(spill)
         self.screen = spill.screen
+        self.bg = pygame.image.load("images/battleship_bg.jpg")
+        self.bg = pygame.transform.scale(self.bg, (1200, 600))
+        
+        # Laster inn knapp lyden og setter volumet
+        self.button_sound = pygame.mixer.Sound("music/button.wav")
+        
+        self.button_sound.set_volume(self.spill.button_volume)
+        
         self.skins = Skins(spill, 1)
-        self.slider = Slider(spill, self.screen.get_width()//2, self.screen.get_height()//2 + 150, 1000, 50, 0, len(self.skins.items)*150, 0)
+        self.slider = Slider(spill, self.screen.get_width()//2, self.screen.get_height()//2 + 200, 1000, 40, 0, len(self.skins.items)*150, 0)
         self.back_to_main_menu = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 + 250, 300, 50, "Main-menu", "images/buttons.png")
     
     def update(self):
@@ -160,13 +167,14 @@ class Shop(State):
         
         if self.back_to_main_menu.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0]:
             self.spill.pressed = False
+            self.button_sound.play()
             self.spill.change_state("mainmenu")
 
         self.skins.update()
         self.slider.update()
     
     def render(self):
-        self.screen.fill("white")
+        self.screen.blit(self.bg, (0,0))
         self.back_to_main_menu.render(self.spill.screen)
         self.skins.render(self.slider)
         self.slider.render(self.screen)

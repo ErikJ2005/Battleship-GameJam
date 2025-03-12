@@ -138,6 +138,7 @@ class MainMenu(State):
         if self.shop.rect.collidepoint(self.spill.pressed_actions["mouse"][1]) and self.spill.pressed and self.spill.pressed_actions["mouse"][0]:
             self.button_sound.play()
             self.spill.change_state("shop")
+            self.spill.pressed = False
 
     def render(self):
         # Tegner bakgrun og overskriften

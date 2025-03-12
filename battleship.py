@@ -307,6 +307,11 @@ class BattleShips(State):
                 self.skins.update()
                 self.spill.change_state("endscreen")
                 self.spill.winner = "You Won!"
+                
+            if self.spill.disconnect == True:
+                self.net.disconnect()
+                self.spill.disconnect = False
+                self.spill.change_state("mainmenu")
 
         except Exception as e:
             print(f"Error handling data: {data_parts}") # Printer ut error meldingen hvis man motar data koden ikke kan håndtere
