@@ -1,4 +1,5 @@
 # https://github.com/Ex1118/Battleship-GameJam.git
+
 # git config --global user.email "andreas.sanila@icloud.com"
 
 # Dette skal gjøre det mulig å kjøre spillet som en .exe fil:
@@ -46,7 +47,6 @@ class Bot(Player):
         self.good_attacks = []
         self.focus = 0
         self.battle_info = [[]]
-        self.ship_sizes = []
         self.battle_focus = False
 
         self.splash = pygame.mixer.Sound("music/splash.wav")
@@ -63,6 +63,7 @@ class Bot(Player):
             board (list): Brettet som den plasserer skipene på
             ship_sizes (list): Størrelsen på skipene som blir plassert
         """
+        
         i = 0
         while len(self.ships) < len(ship_sizes):
             if self.place_ship(board, random.randint(0, 9), random.randint(0, 9), random.choice(["horizontal", "vertical"]), ship_sizes[i]):
