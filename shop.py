@@ -15,7 +15,6 @@ class Skins:
         self.button_sound.set_volume(self.spill.button_volume)
         self.coins = 0
         self.items = [[pygame.image.load("images/ship.png"), 0],
-
         [pygame.image.load("images/hotdog.png"), 5],
         [pygame.image.load("images/gummibåt.png"), 15],
         [pygame.image.load("images/pirateship.png"), 25],
