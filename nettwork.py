@@ -1,6 +1,6 @@
 import socket
 
-class Network():
+class Nettwork():
     def __init__(self, ip):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = ip # Nettverks ip

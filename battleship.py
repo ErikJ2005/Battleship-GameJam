@@ -1,6 +1,6 @@
 import pygame
 from state import State
-from network import Network
+from nettwork import Nettwork
 from shop import Skins
 import json  # Import JSON module
 
@@ -143,7 +143,7 @@ class BattleShips(State):
         if networking:
             self.net = None
             try:
-                self.net = Network(self.spill.ip)   
+                self.net = Nettwork(self.spill.ip)   
             except:
                 if hasattr(self.spill, "states"):
                     self.spill.change_state("mainmenu")  
