@@ -476,4 +476,6 @@ class LocalBattleships(BattleShips):
             self.draw_text(self.text_turn, 40, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - 120)    
         
         self.draw_text(f"ships sunk: {self.player.destroyed_ships}", 50, (0, 0, 0), self.spill.screen.get_width() // 2, 30)
+        
+        self.draw_text("Press ESC to leave game", self.spill.screen.get_height()//20, (0, 0, 0), self.spill.screen.get_width() // 10, self.spill.screen.get_height() - self.spill.screen.get_height()//15)
         pygame.display.flip()

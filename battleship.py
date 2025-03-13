@@ -428,3 +428,5 @@ class BattleShips(State):
         
         if self.player.player_id == 0:
             self.draw_text(f"Join ip: {self.spill.ip}", self.spill.screen.get_height()//15, (0, 0, 0), self.spill.screen.get_width()//6, self.spill.screen.get_height()//30)
+
+        self.draw_text("Press ESC to leave game", self.spill.screen.get_height()//20, (0, 0, 0), self.spill.screen.get_width() // 10, self.spill.screen.get_height() - self.spill.screen.get_height()//15)
