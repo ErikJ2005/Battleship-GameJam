@@ -45,12 +45,12 @@ class Main:
         
         # Setter opp states
         self.states = {
-            "mainmenu" : MainMenu(self),
-            "battleship" : BattleShips(self, True),
-            "localbattleships" : LocalBattleships(self),
-            "endscreen" : EndScreen(self),
-            "settings" : Settings(self),
-            "shop" : Shop(self),
+            "mainmenu" : MainMenu,
+            "battleship" : BattleShips,
+            "localbattleships" : LocalBattleships,
+            "endscreen" : EndScreen,
+            "settings" : Settings,
+            "shop" : Shop,
         }
         self.change_state("mainmenu")
     
@@ -60,11 +60,10 @@ class Main:
         Args:
             state (str): Key til staten i ordboken hvor alle statene er lagret
         """
-        self.state = self.states[state]
         if state == "battleship":
-            self.state.__init__(self, True)
+            self.state = self.states[state](self, True)
         else:
-            self.state.__init__(self)
+            self.state = self.states[state](self)
     
     # Hoved loopen til spillet
     def main_loop(self):
