@@ -55,7 +55,6 @@ class Bot(Player):
         self.explosion.set_volume(self.spill.hit_volume)
         
 
-
     def place_ships(self,board: list, ship_sizes: list):
         """
         Plaserer skip.
@@ -70,6 +69,7 @@ class Bot(Player):
             if self.place_ship(board, random.randint(0, 9), random.randint(0, 9), random.choice(["horizontal", "vertical"]), ship_sizes[i]):
                 i += 1
 
+
     def best_attack_location(self, defender: Player):
         shot_lock = True
         empty_pos = []
@@ -82,6 +82,7 @@ class Bot(Player):
             for y_pos in range(len(defender.board[x_pos])):
                 if [x_pos, y_pos] not in self.attacked_positions:
                     empty_pos.append([x_pos,y_pos])
+                    
         while shot_lock:
             shot = empty_pos[random.randint(0,len(empty_pos)-1)]
             shot_copy = json.loads(json.dumps(shot))
@@ -476,6 +477,4 @@ class LocalBattleships(BattleShips):
             self.draw_text(self.text_turn, 40, (0, 0, 0), self.spill.screen.get_width() // 2 - self.cell_size * 5 - self.cell_size // 2, self.spill.screen.get_height() - 120)    
         
         self.draw_text(f"ships sunk: {self.player.destroyed_ships}", 50, (0, 0, 0), self.spill.screen.get_width() // 2, 30)
-        
-        self.draw_text("Press ESC to leave game", self.spill.screen.get_height()//20, (0, 0, 0), self.spill.screen.get_width() // 10, self.spill.screen.get_height() - self.spill.screen.get_height()//15)
         pygame.display.flip()

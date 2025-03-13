@@ -84,6 +84,9 @@ class Main:
                     self.disconnect = True
                 elif self.state != self.states["mainmenu"]:
                     self.change_state("mainmenu")
+                else:
+                    self.running = False
+                    pygame.mixer.music.stop()
             
             # Får inn mus inputen og posisjonen til der man trykket
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -119,4 +122,3 @@ class Main:
 main = Main()
 while main.running:
     main.main_loop()
-
