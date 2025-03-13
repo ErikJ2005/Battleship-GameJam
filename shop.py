@@ -15,10 +15,11 @@ class Skins:
         self.button_sound.set_volume(self.spill.button_volume)
         self.coins = 0
         self.items = [[pygame.image.load("images/ship.png"), 0],
-                      [pygame.image.load("images/hotdog.png"), 50],
-                        [pygame.image.load("images/gummibåt.png"), 100],
-                        [pygame.image.load("images/pirateship.png"), 250],
-                        [pygame.image.load("images/spaceship.png"), 500]]
+
+        [pygame.image.load("images/hotdog.png"), 5],
+        [pygame.image.load("images/gummibåt.png"), 15],
+        [pygame.image.load("images/pirateship.png"), 25],
+        [pygame.image.load("images/spaceship.png"), 35]]
         
         if image_dir == 0:
             self.items[0][0] = pygame.transform.rotate(self.items[0][0], 0)

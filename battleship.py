@@ -113,12 +113,12 @@ class Player(State):
         return True
     
 class BattleShips(State):
-    def __init__(self, spill, networking : bool):
+    def __init__(self, spill, nettworking : bool):
         """ Hoved spillet som er det som blir kjørt når man spiller
 
         Args:
             spill (_type_): peker mot hoved scriptet
-            networking (_type_): Sier om man skal bruke netverk eller ikke så man kan gjenbruke koden hvis man vil lage en singleplayer versjon
+            nettworking (_type_): Sier om man skal bruke netverk eller ikke så man kan gjenbruke koden hvis man vil lage en singleplayer versjon
         """
         super().__init__(spill)
         # Alle bildene som blir brukt
@@ -140,7 +140,7 @@ class BattleShips(State):
         self.font = pygame.font.Font(None, 24)
         
         # Setter opp netverk og kobler til riktig ip
-        if networking:
+        if nettworking:
             self.net = None
             try:
                 self.net = Nettwork(self.spill.ip)   
