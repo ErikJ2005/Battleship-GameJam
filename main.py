@@ -8,7 +8,6 @@ from shop import Shop
 
 class Main:
     def __init__(self):
-        
         # Spiller musiken til spillet
         pygame.mixer.init()
         pygame.mixer.music.load("music/theme_song.wav")

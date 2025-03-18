@@ -11,7 +11,7 @@
 # cd "C:\Path\To\Your\Project"
 
 # Step 3: Kjør kommandoen under for å lage en .exe fil
-# pyinstaller --onefile main.py
+# pyinstaller --onefile --add-data "host.py;." --windowed --icon=battleship_icon.ico main.py
 
 
 from battleship import Player, BattleShips

@@ -1,7 +1,7 @@
 import pygame
 import subprocess
 import socket
-import threading
+import threading, sys, os
 from state import State
 
 class Button(State):
@@ -53,6 +53,7 @@ class MainMenu(State):
         self.settings = Button(self, 50, 50, 50, 50, "settings", "images/settings.png")
         self.shop = Button(spill, self.spill.screen.get_width() // 2, self.spill.screen.get_height() // 2 - 100, 300, 50, "Shop", "images/buttons.png")
         
+        self.script_path = os.path.join(sys._MEIPASS, "host.py") if getattr(sys, 'frozen', False) else "host.py"
         
         self.running = True
         
@@ -73,7 +74,7 @@ class MainMenu(State):
                 _, ip, _ = message.split(":")
 
                 # Legger kun til unike ip-er
-                if ip not in self.discovered_servers:
+                if ip not in self.discovered_servers and ip != socket.gethostbyname(socket.gethostname()):
                     self.discovered_servers.append(ip)
             except socket.timeout:
                 pass  # håpper over hvis den ikke finer noe
@@ -111,7 +112,7 @@ class MainMenu(State):
         # Starter opp serveren og starter spillet så man kan vente på at en annen blir med på samme nett
         if self.host_game.rect.collidepoint(self.spill.pressed_actions["mouse"][1]):
             self.button_sound.play()
-            subprocess.Popen(["python", "host.py"])
+            subprocess.Popen(["python", self.script_path], creationflags=subprocess.CREATE_NO_WINDOW)
             self.spill.ip = socket.gethostbyname(socket.gethostname())
             self.spill.change_state("battleship")
 
