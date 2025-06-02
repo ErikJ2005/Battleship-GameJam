@@ -1,7 +1,4 @@
-import pygame
-import subprocess
-import socket
-import threading, sys, os
+import pygame, subprocess, socket, threading, sys, os
 from state import State
 
 class Button(State):

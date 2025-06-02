@@ -15,11 +15,7 @@
 
 
 from battleship import Player, BattleShips
-import random
-import pygame
-import json
-import time
-
+import random, pygame, json, time
 
 class Bot(Player):
     """

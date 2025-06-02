@@ -1,8 +1,7 @@
-import pygame
+import pygame, json
 from state import State
 from nettwork import Nettwork
 from shop import Skins
-import json  # Import JSON module
 
 class Player(State):
     def __init__(self, spill, player_id):
